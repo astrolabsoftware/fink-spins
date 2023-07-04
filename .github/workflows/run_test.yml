@@ -1,4 +1,4 @@
-name: PEP8
+name: Sentinel
 
 on:
   push:
