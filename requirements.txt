@@ -1,1 +1,24 @@
+# Dependencies for Fink
+numpy>=1.17
+coverage>=4.2
+coveralls==3.2.0
+pandas==1.3.5
+# > 1.9. see https://github.com/edenhill/librdkafka/issues/3263
+confluent-kafka==1.9.2
+avro-python3==1.10.2
+Cython==0.29.15
+fastavro==1.6.0
+pyarrow==9.0.0
+slackclient==2.9.3
 astropy==4.0
+astroquery==0.4.6
+fink_filters>=3.5
+git+https://github.com/astrolabsoftware/fink-science@4.2.0
+fink-utils>=0.13.3
+scipy==1.4.1
+scikit-learn==1.0.2
+scikit-image==0.16.2
+healpy==1.16.1
+fink-tns>=0.6
+protobuf==3.20
+space-rocks==1.8.5
