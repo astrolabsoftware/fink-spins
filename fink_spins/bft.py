@@ -25,21 +25,6 @@ import numpy as np
 import pandas as pd
 from scipy.stats import skew, kurtosis
 
-MODELS = {
-    'HG': {
-        'p0': [15.0, 0.15],
-        'bounds': ([0, 0], [30, 1])
-    },
-    'HG1G2': {
-        'p0': [15.0, 0.15, 0.15],
-        'bounds': ([0, 0, 0], [30, 1, 1])
-    },
-    'SHG1G2': {
-        'p0': [15.0, 0.15, 0.15, 0.8, np.pi, 0.0],
-        'bounds': ([0, 0, 0, 1e-1, 0, -np.pi / 2], [30, 1, 1, 1, 2 * np.pi, np.pi / 2])
-    },
-}
-
 COLUMNS_ZTF = [
     'ssnamenr',
     'jd', # last update?
@@ -134,6 +119,21 @@ def estimate_sso_params_spark(ssnamenr, magpsf, sigmapsf, jd, fid, ra, dec, meth
         Series with dictionaries. Keys are parameter names (H, G, etc.)
         depending on the model chosen.
     """
+    MODELS = {
+        'HG': {
+            'p0': [15.0, 0.15],
+            'bounds': ([0, 0], [30, 1])
+        },
+        'HG1G2': {
+            'p0': [15.0, 0.15, 0.15],
+            'bounds': ([0, 0, 0], [30, 1, 1])
+        },
+        'SHG1G2': {
+            'p0': [15.0, 0.15, 0.15, 0.8, np.pi, 0.0],
+            'bounds': ([0, 0, 0, 1e-1, 0, -np.pi / 2], [30, 1, 1, 1, 2 * np.pi, np.pi / 2])
+        },
+    }
+
     # loop over SSO
     out = []
     for index, ssname in enumerate(ssnamenr.values):
