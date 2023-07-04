@@ -26,4 +26,4 @@ jobs:
         pip install flake8
     - name: Lint utilities
       run: |
-        flake8 fink-utils
+        flake8 fink_utils
