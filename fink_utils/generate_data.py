@@ -21,7 +21,23 @@ import rocks
 rocks.set_log_level("error")
 
 
-def format_HG(data_hg, filters):
+def format_HG(data_hg: pd.DataFrame, filters: dict) -> pd.DataFrame:
+    """
+    Format the columns of the HG dataframe
+
+    Parameters
+    ----------
+    data_hg : DataFrame
+        HG data
+    filters : dict
+        filter dict
+
+    Returns
+    -------
+    pd.DataFrame
+        same as input but with columns rename and new columns to match the final dataframe of the script.
+    """
+
     # HG to data
     names_numbers = rocks.identify(data_hg.ssnamenr)
     data_hg["number"] = [nn[1] for nn in names_numbers]
@@ -64,7 +80,23 @@ def format_HG(data_hg, filters):
     return data_hg
 
 
-def format_HG1G2(data_hg1g2, filters):
+def format_HG1G2(data_hg1g2: pd.DataFrame, filters: dict) -> pd.DataFrame:
+    """
+    Format the columns of the HG1G2 dataframe
+
+    Parameters
+    ----------
+    data_hg1g2 : DataFrame
+        HG1G2 data
+    filters : dict
+        filter dict
+
+    Returns
+    -------
+    pd.DataFrame
+        same as input but with columns rename and new columns to match the final dataframe of the script.
+    """
+
     # HG1G2 to data
     for filt in filters.keys():
         print(filt)
@@ -104,7 +136,23 @@ def format_HG1G2(data_hg1g2, filters):
     return data_hg1g2
 
 
-def format_sHG1G2(data_hg1g2hyb, filters):
+def format_sHG1G2(data_hg1g2hyb: pd.DataFrame, filters: dict) -> pd.DataFrame:
+    """
+    Format the columns of the sHG1G2 dataframe
+
+    Parameters
+    ----------
+    data_hg1g2hyb : DataFrame
+        sHG1G2 data
+    filters : dict
+        filter dict
+
+    Returns
+    -------
+    pd.DataFrame
+        same as input but with columns rename and new columns to match the final dataframe of the script.
+    """
+
     # HG1G2hyb to data
     for filt in filters.keys():
         print(filt)
