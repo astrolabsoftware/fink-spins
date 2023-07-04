@@ -23,6 +23,7 @@ from fink_utils.sso.spins import estimate_sso_params
 
 import numpy as np
 import pandas as pd
+from scipy.stats import skew, kurtosis
 
 MODELS = {
     'HG': {
@@ -54,7 +55,7 @@ COLUMNS_FINK = [
     'R',
     'alpha0',
     'delta0',
-    'obliquity', # ??????
+    'obliquity', # a posteriori
     'errH_1',
     'errH_2',
     'errG1_1',
@@ -68,26 +69,36 @@ COLUMNS_FINK = [
     'meanCosLambda',
     'minCosLambda',
     'minphase',
-    'minphase_1', # missing
-    'minphase_2', # missing
+    'minphase_1',
+    'minphase_2',
     'maxphase',
-    'maxphase_1', # missing
-    'maxphase_2', # missing
+    'maxphase_1',
+    'maxphase_2',
     'chi2red',
     'rms',
     'rms_1',
     'rms_2',
-    'meanAstrometry', # missing
-    'stdAstrometry', # missing
-    'nmeasurements',
+    'meanDeltaRAcosDEC',
+    'stdDeltaRAcosDEC',
+    'skewDeltaRAcosDEC',
+    'kurtosisDeltaRAcosDEC',
+    'meanDeltaDEC',
+    'stdDeltaDEC',
+    'skewDeltaDEC',
+    'kurtosisDeltaDEC',
+    'nobs',
+    'nobs_1',
+    'nobs_2',
     'ndays',
+    'ndays_1',
+    'ndays_2',
     'fit',
     'status'
 ]
 
 COLUMNS_SSODNET = [
-    'name', # missing
-    'number', # missing
+    'name', # a posteriori
+    'number', # a posteriori
 ]
 
 @pandas_udf(MapType(StringType(), FloatType()), PandasUDFType.SCALAR)
@@ -190,6 +201,27 @@ def estimate_sso_params_spark(ssnamenr, magpsf, sigmapsf, jd, fid, ra, dec, meth
                     model=model.values[0],
                     normalise_to_V=False
                 )
+
+            # Add astrometry
+            deltaRAcosDEC = (pdf['i:ra'] - pdf.RA) * np.cos(np.radians(pdf['i:dec'])) * 3600
+            outdic['meanDeltaRAcosDEC'] = np.mean(deltaRAcosDEC)
+            outdic['stdDeltaRAcosDEC'] = np.std(deltaRAcosDEC)
+            outdic['skewDeltaRAcosDEC'] = skew(deltaRAcosDEC)
+            outdic['kurtosisDeltaRAcosDEC'] = kurtosis(deltaRAcosDEC)
+
+
+            deltaDEC = (pdf['i:dec'] - pdf.Dec) * 3600
+            outdic['meanDeltaDEC'] = np.mean(deltaDEC)
+            outdic['stdDeltaDEC'] = np.std(deltaDEC)
+            outdic['skewDeltaDEC'] = skew(DeltaDEC)
+            outdic['kurtosisDeltaDEC'] = kurtosis(DeltaDEC)
+
+            # Time lapse
+            outdic['ndays'] = len(pdf['jd'].values)
+            ufilters = np.unique(fid)
+            for filt in ufilters:
+                mask = fid == filt
+                outdic['ndays_{}'.format(filt)] = len(pdf['jd'].values[mask])
 
             out.append(outdic)
     return pd.Series(out)
