@@ -218,10 +218,12 @@ def estimate_sso_params_spark(ssnamenr, magpsf, sigmapsf, jd, fid, ra, dec, meth
 
             # Time lapse
             outdic['ndays'] = len(pdf['jd'].values)
-            ufilters = np.unique(fid)
+            ufilters = np.unique(pdf['i:fid'].values)
             for filt in ufilters:
-                mask = fid == filt
+                mask = pdf['i:fid'].values == filt
                 outdic['ndays_{}'.format(filt)] = len(pdf['jd'].values[mask])
+
+            outdic['lastjd'] = np.max(pdf['jd'].values)
 
             out.append(outdic)
     return pd.Series(out)
