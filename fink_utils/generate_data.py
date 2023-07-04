@@ -39,7 +39,7 @@ def format_HG(data_hg: pd.DataFrame, filters: dict) -> pd.DataFrame:
 
     Examples
     --------
-    >>> HG_data = format_HG(data_hg, filters) # doctest: +NORMALIZE_WHITESPACE
+    >>> HG_data = format_HG(data_hg, filters) # doctest: +IGNORE_RESULT
     >>> len(HG_data)
     115148
     >>> HG_data.columns
