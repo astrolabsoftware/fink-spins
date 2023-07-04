@@ -22,3 +22,4 @@ healpy==1.16.1
 fink-tns>=0.6
 protobuf==3.20
 space-rocks==1.8.5
+pytest==7.4.0
