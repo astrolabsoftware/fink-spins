@@ -10,7 +10,7 @@ Cython==0.29.15
 fastavro==1.6.0
 pyarrow==9.0.0
 slackclient==2.9.3
-astropy==4.0
+astropy==5.0
 astroquery==0.4.6
 fink_filters>=3.5
 git+https://github.com/astrolabsoftware/fink-science@4.2.0
