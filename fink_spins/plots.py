@@ -40,7 +40,7 @@ def plot_lightcurve(model: Model):
         pred_mag,
         color=Model.colors[model.int_filter - 1],
         linestyle="dotted",
-        label=f"HG",
+        label="HG",
     )
     ax[0].set_title("lightcurve")
 
@@ -52,7 +52,7 @@ def plot_lightcurve(model: Model):
         color=Model.colors[model.int_filter - 1],
         alpha=0.1,
         marker="s",
-        label=f"HG",
+        label="HG",
     )
     ax[1].set_title("residuals")
 
@@ -79,10 +79,10 @@ def plot_phase(model: Model):
     cond = model.ztf["i:fid"] == model.int_filter
 
     # plot observations
+    # fmt: off
     ax[0].scatter(
         model.ztf.loc[cond, "Phase"],
-        model.ztf.loc[cond, "i:magpsf"]
-        - Model.dist_reduction(
+        model.ztf.loc[cond, "i:magpsf"] - Model.dist_reduction(
             model.ztf.loc[cond, "Dobs"], model.ztf.loc[cond, "Dhelio"]
         ),
         s=20,
@@ -90,6 +90,7 @@ def plot_phase(model: Model):
         color=Model.colors[model.int_filter - 1],
         label=f"ZTF {model.filter}",
     )
+    # fmt: on
 
     # plot model predictions
     if isinstance(model, sHG1G2):
@@ -103,14 +104,14 @@ def plot_phase(model: Model):
             min_hg1g2,
             color=Model.colors[model.int_filter - 1],
             linestyle="dotted",
-            label=f"min H",
+            label="min H",
         )
         ax[0].plot(
             model.eph["Phase"],
             max_hg1g2,
             color=Model.colors[model.int_filter - 1],
             linestyle="dotted",
-            label=f"max H",
+            label="max H",
         )
     else:
         x = np.radians(model.eph["Phase"])
@@ -121,7 +122,7 @@ def plot_phase(model: Model):
         y,
         color=Model.colors[model.int_filter - 1],
         linestyle="dotted",
-        label=f"HG",
+        label="HG",
     )
     ax[0].set_title("lightcurve")
     ax[0].invert_yaxis()
@@ -134,7 +135,7 @@ def plot_phase(model: Model):
         color=Model.colors[model.int_filter - 1],
         alpha=0.1,
         marker="s",
-        label=f"HG",
+        label="HG",
     )
     ax[1].set_title("residuals")
 
