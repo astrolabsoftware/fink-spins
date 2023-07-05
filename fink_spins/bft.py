@@ -14,6 +14,10 @@
 # limitations under the License.
 """ This file contains scripts and definition for the Fink BFT
 """
+import io
+import time
+import requests
+
 import pyspark.sql.functions as F
 from pyspark.sql.functions import pandas_udf, PandasUDFType
 from pyspark.sql.types import MapType, FloatType, StringType
@@ -24,10 +28,14 @@ from fink_utils.sso.spins import estimate_sso_params
 import numpy as np
 import pandas as pd
 from scipy.stats import skew, kurtosis
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+
+import rocks
 
 COLUMNS_ZTF = [
     'ssnamenr',
-    'jd', # last update?
+    'last_jd',
 ]
 
 COLUMNS_FINK = [
@@ -38,52 +46,54 @@ COLUMNS_FINK = [
     'G2_1',
     'G2_2',
     'R',
-    'alpha0',
-    'delta0',
-    'obliquity', # a posteriori
-    'errH_1',
-    'errH_2',
-    'errG1_1',
-    'errG1_2',
-    'errG2_1',
-    'errG2_2',
-    'errR',
-    'erralpha0',
-    'errdelta0',
-    'maxCosLambda',
-    'meanCosLambda',
-    'minCosLambda',
-    'minphase',
-    'minphase_1',
-    'minphase_2',
-    'maxphase',
-    'maxphase_1',
-    'maxphase_2',
+    'alpha0', # degree
+    'delta0', # degree
+    'obliquity', # degree
+    'err_H_1',
+    'err_H_2',
+    'err_G1_1',
+    'err_G1_2',
+    'err_G2_1',
+    'err_G2_2',
+    'err_R',
+    'err_alpha0', # degree
+    'err_delta0', # degree
+    'max_cos_lambda',
+    'mean_cos_lambda',
+    'min_cos_lambda',
+    'min_phase', # degree
+    'min_phase_1', # degree
+    'min_phase_2', # degree
+    'max_hase', # degree
+    'max_phase_1', # degree
+    'max_phase_2', # degree
     'chi2red',
     'rms',
     'rms_1',
     'rms_2',
-    'meanDeltaRAcosDEC',
-    'stdDeltaRAcosDEC',
-    'skewDeltaRAcosDEC',
-    'kurtosisDeltaRAcosDEC',
-    'meanDeltaDEC',
-    'stdDeltaDEC',
-    'skewDeltaDEC',
-    'kurtosisDeltaDEC',
-    'nobs',
-    'nobs_1',
-    'nobs_2',
-    'ndays',
-    'ndays_1',
-    'ndays_2',
+    'mean_delta_RA_cos_DEC', # arcsecond
+    'std_delta_RA_cos_DEC', # arcsecond
+    'skew_delta_RA_cos_DEC', # arcsecond-2
+    'kurtosis_delta_RA_cos_DEC', # arcsecond-3
+    'mean_delta_DEC', # arcsecond
+    'std_delta_DEC', # arcsecond
+    'skew_delta_DEC', # arcsecond-2
+    'kurtosis_delta_DEC', # arcsecond-3
+    'n_obs',
+    'n_obs_1',
+    'n_obs_2',
+    'n_days',
+    'n_days_1',
+    'n_days_2',
     'fit',
-    'status'
+    'status',
+    'flag',
+    'version',
 ]
 
 COLUMNS_SSODNET = [
-    'name', # a posteriori
-    'number', # a posteriori
+    'sso_name',
+    'sso_number',
 ]
 
 @pandas_udf(MapType(StringType(), FloatType()), PandasUDFType.SCALAR)
@@ -204,26 +214,283 @@ def estimate_sso_params_spark(ssnamenr, magpsf, sigmapsf, jd, fid, ra, dec, meth
 
             # Add astrometry
             deltaRAcosDEC = (pdf['i:ra'] - pdf.RA) * np.cos(np.radians(pdf['i:dec'])) * 3600
-            outdic['meanDeltaRAcosDEC'] = np.mean(deltaRAcosDEC)
-            outdic['stdDeltaRAcosDEC'] = np.std(deltaRAcosDEC)
-            outdic['skewDeltaRAcosDEC'] = skew(deltaRAcosDEC)
-            outdic['kurtosisDeltaRAcosDEC'] = kurtosis(deltaRAcosDEC)
+            outdic['mean_delta_RA_cos_DEC'] = np.mean(deltaRAcosDEC)
+            outdic['std_delta_RA_cos_DEC'] = np.std(deltaRAcosDEC)
+            outdic['skew_delta_RA_cos_DEC'] = skew(deltaRAcosDEC)
+            outdic['kurtosis_delta_RA_cos_DEC'] = kurtosis(deltaRAcosDEC)
 
 
             deltaDEC = (pdf['i:dec'] - pdf.Dec) * 3600
-            outdic['meanDeltaDEC'] = np.mean(deltaDEC)
-            outdic['stdDeltaDEC'] = np.std(deltaDEC)
-            outdic['skewDeltaDEC'] = skew(DeltaDEC)
-            outdic['kurtosisDeltaDEC'] = kurtosis(DeltaDEC)
+            outdic['mean_delta_DEC'] = np.mean(deltaDEC)
+            outdic['std_delta_DEC'] = np.std(deltaDEC)
+            outdic['skew_delta_DEC'] = skew(deltaDEC)
+            outdic['kurtosis_delta_DEC'] = kurtosis(deltaDEC)
 
             # Time lapse
-            outdic['ndays'] = len(pdf['jd'].values)
+            outdic['n_days'] = len(pdf['i:jd'].values)
             ufilters = np.unique(pdf['i:fid'].values)
             for filt in ufilters:
                 mask = pdf['i:fid'].values == filt
-                outdic['ndays_{}'.format(filt)] = len(pdf['jd'].values[mask])
+                outdic['n_days_{}'.format(filt)] = len(pdf['i:jd'].values[mask])
 
-            outdic['lastjd'] = np.max(pdf['jd'].values)
+            outdic['last_jd'] = np.max(pdf['i:jd'].values)
 
             out.append(outdic)
     return pd.Series(out)
+
+def rockify(ssnamenr: pd.Series):
+    """ Extract names and numbers from ssnamenr
+
+    Parameters
+    ----------
+    ssnamenr: pd.Series of str
+        SSO names as given in ZTF alert packets
+
+    Returns
+    -----------
+    sso_name: np.array of str
+        SSO names according to quaero
+    sso_number: np.array of int
+        SSO numbers according to quaero
+    """
+    names_numbers = rocks.identify(ssnamenr)
+
+    sso_name = np.transpose(names_numbers)[0]
+    sso_number = np.transpose(names_numbers)[1]
+
+    return sso_name, sso_number
+
+def angular_separation(lon1, lat1, lon2, lat2):
+    """
+    Angular separation between two points on a sphere.
+    Stolen from astropy -- for version <5
+
+    Parameters
+    ----------
+    lon1, lat1, lon2, lat2 : `~astropy.coordinates.Angle`, `~astropy.units.Quantity` or float
+        Longitude and latitude of the two points. Quantities should be in
+        angular units; floats in radians.
+
+    Returns
+    -------
+    angular separation : `~astropy.units.Quantity` ['angle'] or float
+        Type depends on input; ``Quantity`` in angular units, or float in
+        radians.
+
+    Notes
+    -----
+    The angular separation is calculated using the Vincenty formula [1]_,
+    which is slightly more complex and computationally expensive than
+    some alternatives, but is stable at at all distances, including the
+    poles and antipodes.
+
+    .. [1] https://en.wikipedia.org/wiki/Great-circle_distance
+    """
+    sdlon = np.sin(lon2 - lon1)
+    cdlon = np.cos(lon2 - lon1)
+    slat1 = np.sin(lat1)
+    slat2 = np.sin(lat2)
+    clat1 = np.cos(lat1)
+    clat2 = np.cos(lat2)
+
+    num1 = clat2 * sdlon
+    num2 = clat1 * slat2 - slat1 * clat2 * cdlon
+    denominator = slat1 * slat2 + clat1 * clat2 * cdlon
+
+    return np.arctan2(np.hypot(num1, num2), denominator)
+
+def extract_obliquity(sso_name, alpha0, delta0, bft_file=None):
+    """ Extract obliquity using spin values, and the BFT information
+
+    Parameters
+    ----------
+    sso_name: np.array or pd.Series of str
+        SSO names according to quaero (see `rockify`)
+    alpha0: np.array or pd.Series of double
+        RA of the pole [degree]
+    delta0: np.array or pd.Series of double
+        DEC of the pole [degree]
+    bft_file: str, optional
+        If given, read the BFT (parquet format). If not specified,
+        download the latest version of the BFT (can be long).
+        Default is None (unspecified).
+
+    Returns
+    ----------
+    obliquity: np.array of double
+        Obliquity for each object [degree]
+    """
+    if bft_file is None:
+        print('BFT not found -- downloading...')
+        r = requests.get('https://ssp.imcce.fr/data/ssoBFT-latest.parquet')
+        pdf_bft = pd.read_parquet(io.BytesIO(r.content))
+    else:
+        pdf_bft = pd.read_parquet(bft_file)
+
+    cols = ['sso_name', 'orbital_elements.node_longitude.value', 'orbital_elements.inclination.value']
+    sub = pdf_bft[cols]
+
+    pdf = pd.DataFrame(
+        {
+            'sso_name': sso_name,
+            'alpha0': alpha0,
+            'delta0': delta0
+        }
+    )
+
+    pdf = pdf.merge(sub[cols], left_on='sso_name', right_on='sso_name', how='left' )
+
+    # Orbit
+    lon_orbit = (pdf['orbital_elements.node_longitude.value'] - 90).values
+    lat_orbit = (90. - pdf['orbital_elements.inclination.value']).values
+
+    # Spin -- convert to EC
+    ra = np.nan_to_num(pdf.alpha0.values) * u.degree
+    dec = np.nan_to_num(pdf.delta0.values) * u.degree
+
+    # Trick to put the object "far enough"
+    coords_spin = SkyCoord(ra=ra, dec=dec, distance=200*u.parsec, frame='hcrs')
+
+    # in radian
+    lon_spin = coords_spin.heliocentricmeanecliptic.lon.value
+    lat_spin = coords_spin.heliocentricmeanecliptic.lat.value
+
+    obliquity = np.degrees(
+        angular_separation(
+            lon_spin,
+            lat_spin,
+            np.radians(lon_orbit),
+            np.radians(lat_orbit)
+        )
+    )
+
+    return obliquity
+
+def aggregate_sso_data(output_filename=None):
+    """ Aggregate all SSO data in Fink
+
+    Data is read from HDFS on VirtualData
+
+    Parameters
+    ----------
+    output_filename: str, optional
+        If given, save data on HDFS. Cannot overwrite. Default is None.
+
+    Returns
+    ----------
+    df_grouped: Spark DataFrame
+        Spark DataFrame with aggregated SSO data.
+    """
+    cols0 = ['candidate.ssnamenr']
+    cols = [
+        'candidate.ra',
+        'candidate.dec',
+        'candidate.magpsf',
+        'candidate.sigmapsf',
+        'candidate.fid',
+        'candidate.jd'
+    ]
+
+    epochs = {
+        'epoch1': [
+            'archive/science/year=2019',
+            'archive/science/year=2020',
+            'archive/science/year=2021',
+        ],
+        'epoch2': [
+            'archive/science/year=2022',
+            'archive/science/year=2023',
+        ]
+    }
+
+    df1 = spark.read.format('parquet').option('basePath', 'archive/science').load(epochs['epoch1'])
+    df1.select(cols0 + cols)\
+        .filter(F.col('ssnamenr') != 'null')\
+        .groupBy('ssnamenr')\
+        .agg(*[F.collect_list(col.split('.')[1]).alias('c' + col.split('.')[1]) for col in cols])
+
+    df2 = spark.read.format('parquet').option('basePath', 'archive/science').load(epochs['epoch2'])
+    df2.select(cols0 + cols)\
+        .filter(F.col('ssnamenr') != 'null')\
+        .groupBy('ssnamenr')\
+        .agg(*[F.collect_list(col.split('.')[1]).alias('c' + col.split('.')[1]) for col in cols])
+
+
+    df_union = df1.union(df2)
+
+    df_grouped = df_union.groupBy('ssnamenr').agg(
+        *[F.flatten(F.collect_list('c' + col.split('.')[1])).alias('c' + col.split('.')[1]) for col in cols]
+    )
+
+    if output_filename is not None:
+        df_grouped.write.parquet('sso_aggregated')
+
+    return df_grouped
+
+
+def build_the_fft(aggregated_filename=None, nproc=80, nmin=50, model='SHG1G2') -> pd.DataFrame:
+    """ Build the Fink Flat Table from scratch
+
+    Parameters
+    ----------
+    aggregated_filename: str
+        If given, read aggregated data on HDFS. Default is None.
+    nproc: int, optional
+        Number of cores to used. Default is 80.
+    nmin: int, optional
+        Minimal number of measurements to select objects (all filters). Default is 50.
+    model: str, optional
+        Model name among HG, HG1G2, SHG1G2. Default is SHG1G2.
+
+    Returns
+    ----------
+    pdf: pd.DataFrame
+        Pandas DataFrame with all the FFT data.
+    """
+
+    if aggregated_filename is not None:
+        df_ztf = spark.read.format('parquet').load(aggregated_data)
+    else:
+        df_ztf = aggregate_sso_data()
+
+    print('{:,} SSO objects in Fink'.format(df_ztf.count()))
+
+    df = df_ztf\
+        .withColumn('nmeasurements', F.size(df_ztf['cra']))\
+        .filter(F.col('nmeasurements') >= nmin)\
+        .repartition(nproc)\
+        .cache()
+
+    print('{:,} SSO objects with more than {} measurements'.format(df.count(), nmin))
+
+    cols = ['ssnamenr', 'params']
+    t0 = time.time()
+    pdf = df\
+        .withColumn(
+            'params',
+            estimate_sso_params_spark(
+                F.col('ssnamenr').astype('string'),
+                'cmagpsf',
+                'csigmapsf',
+                'cjd',
+                'cfid',
+                'cra',
+                'cdec',
+                F.lit('ephemcc'),
+                F.lit(model)
+            )
+        ).select(cols).toPandas()
+
+    print('Time to extract parameters: {:.2f}'.format(time.time() - t0))
+
+    pdf = pd.concat([pdf, pd.json_normalize(pdf.params)], axis=1).drop('params', axis=1)
+
+    sso_name, sso_number = rockify(pdf.ssnamenr)
+    pdf['sso_name'] = sso_name
+    pdf['sso_number'] = sso_number
+
+    pdf['obliquity'] = extract_obliquity(pdf.sso_name, pdf.alpha0, pdf.delta0, bft_file=None)
+
+    return pdf
+
+
