@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from astropy.coordinates import SkyCoord
-import astropy.units as u
 
-import fink_utils.sso.spins as finkus
+# from astropy.coordinates import SkyCoord
+# import astropy.units as u
+
+# import fink_utils.sso.spins as finkus
 
 from fink_spins.model import Model, sHG1G2
 
