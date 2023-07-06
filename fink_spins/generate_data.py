@@ -85,8 +85,8 @@ def format_HG(data_hg: pd.DataFrame, filters: dict) -> pd.DataFrame:
     data_hg["HG_rms"] = data_hg["params"].str["rms"]
     data_hg["HG_chi2red"] = data_hg["params"].str["chi2red"]
 
-    data_hg["HG1G2_status"] = data_hg["params"].str["status"]
-    data_hg["HG1G2_fit"] = data_hg["params"].str["fit"]
+    data_hg["HG_status"] = data_hg["params"].str["status"]
+    data_hg["HG_fit"] = data_hg["params"].str["fit"]
 
     cond = data_hg.name.notna()
     data_hg = data_hg[cond].reset_index(drop=True)
