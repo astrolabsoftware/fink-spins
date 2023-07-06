@@ -107,28 +107,28 @@ def plot_ph(ax, model):
     if isinstance(model, sHG1G2):
         x = model.pha_eph()
         y = model.mag_model(x)
-        _, G1, G2, sRA, sDEC, _ = model.get_data_model()
+        # _, G1, G2, sRA, sDEC, _ = model.get_data_model()
 
-        # Compute Lambda
-        coords = SkyCoord(
-            model.ztf["i:ra"], model.ztf["i:dec"], unit=(u.hourangle, u.deg)
-        )
+        # # Compute Lambda
+        # coords = SkyCoord(
+        #     model.ztf["i:ra"], model.ztf["i:dec"], unit=(u.hourangle, u.deg)
+        # )
 
-        ra = np.radians(coords.ra.deg)
-        dec = np.radians(coords.dec.deg)
-        cos_lambda = np.sin(dec) * np.sin(sDEC) + np.cos(dec) * np.cos(sDEC) * np.cos(
-            ra - sRA
-        )
-        idx_mincos = np.argmin(cos_lambda)
-        idx_maxcos = np.argmax(cos_lambda)
-        x_min = [x[0, idx_mincos], x[1, idx_mincos], x[2, idx_mincos]]
-        x_max = [x[0, idx_maxcos], x[1, idx_maxcos], x[2, idx_maxcos]]
-        min_hg1g2 = finkus.func_hg1g2(
-            np.radians(model.eph["Phase"]), model.mag_model(x_min), G1, G2
-        )
-        max_hg1g2 = finkus.func_hg1g2(
-            np.radians(model.eph["Phase"]), model.mag_model(x_min), G1, G2
-        )
+        # ra = np.radians(coords.ra.deg)
+        # dec = np.radians(coords.dec.deg)
+        # cos_lambda = np.sin(dec) * np.sin(sDEC) + np.cos(dec) * np.cos(sDEC) * np.cos(
+        #     ra - sRA
+        # )
+        # idx_mincos = np.argmin(cos_lambda)
+        # idx_maxcos = np.argmax(cos_lambda)
+        # x_min = [x[0, idx_mincos], x[1, idx_mincos], x[2, idx_mincos]]
+        # x_max = [x[0, idx_maxcos], x[1, idx_maxcos], x[2, idx_maxcos]]
+        # min_hg1g2 = finkus.func_hg1g2(
+        #     np.radians(model.eph["Phase"]), model.mag_model(x_min), G1, G2
+        # )
+        # max_hg1g2 = finkus.func_hg1g2(
+        #     np.radians(model.eph["Phase"]), model.mag_model(x_min), G1, G2
+        # )
         # ax[0].plot(
         #     model.eph["Phase"],
         #     min_hg1g2,
