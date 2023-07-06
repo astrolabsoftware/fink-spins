@@ -28,4 +28,4 @@ jobs:
         pip install pytest
     - name: Lint utilities
       run: |
-        pytest --doctest-modules fink_utils
+        pytest --doctest-modules fink_spins
