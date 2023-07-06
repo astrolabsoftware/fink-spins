@@ -19,6 +19,8 @@ import requests
 import io
 
 import rocks
+import sys
+
 
 rocks.set_log_level("critical")
 
@@ -254,7 +256,7 @@ if __name__ == "__main__":
     filters = {"1": "g", "2": "r"}
 
     r = requests.post(
-        "http://157.136.252.46:24000/api/v1/fft",
+        sys.argv[1],
         json={"output-format": "parquet"},
     )
     data_shg1g2 = pd.read_parquet(io.BytesIO(r.content))
