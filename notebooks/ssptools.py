@@ -83,16 +83,13 @@ def ephemcc(ident, ep, nbd=None, step=None, observer='500', rplane='1', tcoor=5)
     # ------
     # Miriade URL 
     url = 'https://ssp.imcce.fr/webservices/miriade/api/ephemcc.php'
-    
-    if rplane=='2':
-        tcoor='1'
         
     # Query parameters
     params = {
         '-name': f'{ident}',
         '-mime': 'json',
         '-rplane': rplane,
-        '-tcoor': tcoor,
+        '-tcoor': str(tcoor),
         '-output': '--jd',
         '-observer': observer, 
         '-tscale': 'UTC'
