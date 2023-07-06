@@ -6,7 +6,7 @@ import io
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-import ssptools
+import notebooks.ssptools
 import fink_utils.sso.spins as finkus
 from abc import ABC, abstractmethod
 
@@ -40,7 +40,9 @@ class Model(ABC):
         self.step = 2
         nbd = (jd_max - jd_min) / self.step
 
-        self.eph = ssptools.ephemcc(target, ep=jd_min, nbd=nbd, step=f"{self.step}d")
+        self.eph = notebooks.ssptools.ephemcc(
+            target, ep=jd_min, nbd=nbd, step=f"{self.step}d"
+        )
 
     def reset_filter(self, band):
         self.filter = band
