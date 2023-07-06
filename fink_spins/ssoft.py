@@ -20,6 +20,7 @@ import time
 import requests
 import datetime
 
+from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 from pyspark.sql.functions import pandas_udf, PandasUDFType
 from pyspark.sql.types import MapType, FloatType, StringType
@@ -47,9 +48,9 @@ COLUMNS = {
     'G2_1': {'type': 'double', 'description': 'G2 phase parameter for the ZTF filter band g'},
     'G2_2': {'type': 'double', 'description': 'G2 phase parameter for the ZTF filter band r'},
     'R': {'type': 'double', 'description': 'Oblateness of the object'},
-    'alpha0': {'type': 'double', 'description': 'Right ascension of the spin axis (EQJ2000), in degree'}, # degree
-    'delta0': {'type': 'double', 'description': 'Declination of the spin axis (EQJ2000), in degree'}, # degree
-    'obliquity': {'type': 'double', 'description': 'Obliquity of the spin axis, in degree'}, # degree
+    'alpha0': {'type': 'double', 'description': 'Right ascension of the spin axis (EQJ2000), in degree'},
+    'delta0': {'type': 'double', 'description': 'Declination of the spin axis (EQJ2000), in degree'},
+    'obliquity': {'type': 'double', 'description': 'Obliquity of the spin axis, in degree'},
     'err_H_1': {'type': 'double', 'description': 'Uncertainty on the absolute magnitude for the ZTF filter band g'},
     'err_H_2': {'type': 'double', 'description': 'Uncertainty on the absolute magnitude for the ZTF filter band r'},
     'err_G1_1': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band g'},
@@ -57,25 +58,25 @@ COLUMNS = {
     'err_G2_1': {'type': 'double', 'description': 'Uncertainty on the G2 phase parameter for the ZTF filter band g'},
     'err_G2_2': {'type': 'double', 'description': 'Uncertainty on the G2 phase parameter for the ZTF filter band r'},
     'err_R': {'type': 'double', 'description': 'Uncertainty on the oblateness'},
-    'err_alpha0': {'type': 'double', 'description': 'Uncertainty on the right ascension of the spin axis (EQJ2000), in degree'}, # degree
-    'err_delta0': {'type': 'double', 'description': 'Uncertainty on the declination of the spin axis (EQJ2000), in degree'}, # degree
+    'err_alpha0': {'type': 'double', 'description': 'Uncertainty on the right ascension of the spin axis (EQJ2000), in degree'},
+    'err_delta0': {'type': 'double', 'description': 'Uncertainty on the declination of the spin axis (EQJ2000), in degree'},
     'max_cos_lambda': {'type': 'double', 'description': 'Maximum of the absolute value of the cosine for the aspect angle'},
     'mean_cos_lambda': {'type': 'double', 'description': 'Mean of the absolute value of the cosine for the aspect angle'},
     'min_cos_lambda': {'type': 'double', 'description': 'Minimum of the absolute value of the cosine for the aspect angle'},
-    'min_phase': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function, in degree'}, # degree
-    'min_phase_1': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function for the ZTF filter band g, in degree'}, # degree
-    'min_phase_2': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function for the ZTF filter band r, in degree'}, # degree
-    'max_hase': {'type': 'double', 'description': 'Maximum phase angle of the observations used to compute the phase function, in degree'}, # degree
-    'max_phase_1': {'type': 'double', 'description': 'Maximum phase angle of the observations used to compute the phase function for the ZTF filter band g, in degree'}, # degree
-    'max_phase_2': {'type': 'double', 'description': 'Maximum phase angle of the observations used to compute the phase function for the ZTF filter band r, in degree'}, # degree
+    'min_phase': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function, in degree'},
+    'min_phase_1': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function for the ZTF filter band g, in degree'},
+    'min_phase_2': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function for the ZTF filter band r, in degree'},
+    'max_hase': {'type': 'double', 'description': 'Maximum phase angle of the observations used to compute the phase function, in degree'},
+    'max_phase_1': {'type': 'double', 'description': 'Maximum phase angle of the observations used to compute the phase function for the ZTF filter band g, in degree'},
+    'max_phase_2': {'type': 'double', 'description': 'Maximum phase angle of the observations used to compute the phase function for the ZTF filter band r, in degree'},
     'chi2red': {'type': 'double', 'description': 'Reduced chi-square of the fit'},
     'rms': {'type': 'double', 'description': 'RMS of the fit, in magnitude'},
     'rms_1': {'type': 'double', 'description': 'RMS of the fit for the filter band g, in magnitude'},
     'rms_2': {'type': 'double', 'description': 'RMS of the fit for the filter band r, in magnitude'},
-    'mean_astrometry': {'type': 'double', 'description': 'Astrometry: mean of the angular separation between observations and ephemerides, in arcsecond'}, # arcsecond
-    'std_astrometry': {'type': 'double', 'description': 'Astrometry: standard deviation of the angular separation between observations and ephemerides, in arcsecond'}, # arcsecond
-    'skew_astrometry': {'type': 'double', 'description': 'Astrometry: skewness of the angular separation between observations and ephemerides'}, # arcsecond-2
-    'kurt_astrometry': {'type': 'double', 'description': 'Astrometry: kurtosis of the angular separation between observations and ephemerides'}, # arcsecond-3
+    'mean_astrometry': {'type': 'double', 'description': 'Astrometry: mean of the angular separation between observations and ephemerides, in arcsecond'},
+    'std_astrometry': {'type': 'double', 'description': 'Astrometry: standard deviation of the angular separation between observations and ephemerides, in arcsecond'},
+    'skew_astrometry': {'type': 'double', 'description': 'Astrometry: skewness of the angular separation between observations and ephemerides'},
+    'kurt_astrometry': {'type': 'double', 'description': 'Astrometry: kurtosis of the angular separation between observations and ephemerides'},
     'n_obs': {'type': 'int', 'description': 'Number of observations in Fink'},
     'n_obs_1': {'type': 'int', 'description': 'Number of observations for the ZTF filter band g in Fink'},
     'n_obs_2': {'type': 'int', 'description': 'Number of observations for the ZTF filter band r in Fink'},
@@ -327,7 +328,7 @@ def extract_obliquity(sso_name, alpha0, delta0, bft_filename=None):
         }
     )
 
-    pdf = pdf.merge(sub[cols], left_on='sso_name', right_on='sso_name', how='left' )
+    pdf = pdf.merge(sub[cols], left_on='sso_name', right_on='sso_name', how='left')
 
     # Orbit
     lon_orbit = (pdf['orbital_elements.node_longitude.value'] - 90).values
@@ -338,7 +339,7 @@ def extract_obliquity(sso_name, alpha0, delta0, bft_filename=None):
     dec = np.nan_to_num(pdf.delta0.values) * u.degree
 
     # Trick to put the object "far enough"
-    coords_spin = SkyCoord(ra=ra, dec=dec, distance=200*u.parsec, frame='hcrs')
+    coords_spin = SkyCoord(ra=ra, dec=dec, distance=200 * u.parsec, frame='hcrs')
 
     # in radian
     lon_spin = coords_spin.heliocentricmeanecliptic.lon.value
@@ -370,6 +371,10 @@ def aggregate_sso_data(output_filename=None):
     df_grouped: Spark DataFrame
         Spark DataFrame with aggregated SSO data.
     """
+    spark = SparkSession \
+        .builder \
+        .getOrCreate()
+
     cols0 = ['candidate.ssnamenr']
     cols = [
         'candidate.ra',
@@ -404,7 +409,6 @@ def aggregate_sso_data(output_filename=None):
         .groupBy('ssnamenr')\
         .agg(*[F.collect_list(col.split('.')[1]).alias('c' + col.split('.')[1]) for col in cols])
 
-
     df_union = df1.union(df2)
 
     df_grouped = df_union.groupBy('ssnamenr').agg(
@@ -415,7 +419,6 @@ def aggregate_sso_data(output_filename=None):
         df_grouped.write.parquet('sso_aggregated')
 
     return df_grouped
-
 
 def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=50, frac=None, model='SHG1G2', version=None) -> pd.DataFrame:
     """ Build the Fink Flat Table from scratch
@@ -444,6 +447,10 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
     pdf: pd.DataFrame
         Pandas DataFrame with all the SSOFT data.
     """
+    spark = SparkSession \
+        .builder \
+        .getOrCreate()
+
     if aggregated_filename is not None:
         df_ztf = spark.read.format('parquet').load(aggregated_filename)
     else:
@@ -459,7 +466,6 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
         .cache()
 
     print('{:,} SSO objects with more than {} measurements'.format(df.count(), nmin))
-
 
     if frac is not None:
         if frac >= 1:
@@ -505,5 +511,3 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
     pdf['flag'] = 0
 
     return pdf
-
-
