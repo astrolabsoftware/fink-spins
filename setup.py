@@ -37,5 +37,4 @@ setuptools.setup(
         "Intended Audience :: Science/Research",
     ],
     project_urls={"Source": "https://github.com/astrolabsoftware/fink-spins"},
-    package_data={"fink_spins": ["data"]},
 )
