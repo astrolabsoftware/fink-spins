@@ -15,6 +15,7 @@
 """ This file contains scripts and definition for the Fink BFT
 """
 import io
+import sys
 import time
 import requests
 import datetime
@@ -287,7 +288,7 @@ def angular_separation(lon1, lat1, lon2, lat2):
 
     return np.arctan2(np.hypot(num1, num2), denominator)
 
-def extract_obliquity(sso_name, alpha0, delta0, bft_file=None):
+def extract_obliquity(sso_name, alpha0, delta0, bft_filename=None):
     """ Extract obliquity using spin values, and the BFT information
 
     Parameters
@@ -298,7 +299,7 @@ def extract_obliquity(sso_name, alpha0, delta0, bft_file=None):
         RA of the pole [degree]
     delta0: np.array or pd.Series of double
         DEC of the pole [degree]
-    bft_file: str, optional
+    bft_filename: str, optional
         If given, read the BFT (parquet format). If not specified,
         download the latest version of the BFT (can be long).
         Default is None (unspecified).
@@ -308,12 +309,12 @@ def extract_obliquity(sso_name, alpha0, delta0, bft_file=None):
     obliquity: np.array of double
         Obliquity for each object [degree]
     """
-    if bft_file is None:
+    if bft_filename is None:
         print('BFT not found -- downloading...')
         r = requests.get('https://ssp.imcce.fr/data/ssoBFT-latest.parquet')
         pdf_bft = pd.read_parquet(io.BytesIO(r.content))
     else:
-        pdf_bft = pd.read_parquet(bft_file)
+        pdf_bft = pd.read_parquet(bft_filename)
 
     cols = ['sso_name', 'orbital_elements.node_longitude.value', 'orbital_elements.inclination.value']
     sub = pdf_bft[cols]
@@ -345,8 +346,8 @@ def extract_obliquity(sso_name, alpha0, delta0, bft_file=None):
 
     obliquity = np.degrees(
         angular_separation(
-            lon_spin,
-            lat_spin,
+            np.radians(lon_spin),
+            np.radians(lat_spin),
             np.radians(lon_orbit),
             np.radians(lat_orbit)
         )
@@ -416,22 +417,26 @@ def aggregate_sso_data(output_filename=None):
     return df_grouped
 
 
-def build_the_fft(aggregated_filename=None, nproc=80, nmin=50, test=None, model='SHG1G2', version=None) -> pd.DataFrame:
+def build_the_fft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=50, frac=None, model='SHG1G2', version=None) -> pd.DataFrame:
     """ Build the Fink Flat Table from scratch
 
     Parameters
     ----------
-    aggregated_filename: str
+    aggregated_filename: str, optional
         If given, read aggregated data on HDFS. Default is None.
+    bft_filename: str, optional
+        If given, read the BFT (parquet format). If not specified,
+        download the latest version of the BFT (can be long).
+        Default is None (unspecified).
     nproc: int, optional
         Number of cores to used. Default is 80.
     nmin: int, optional
         Minimal number of measurements to select objects (all filters). Default is 50.
-    test: int, optional
-        If specified, limit the number of SSO to analyse to `test`. Default is None.
+    frac: float, optional
+        If specified, sample a fraction of the dataset (between 0 and 1). Default is None.
     model: str, optional
         Model name among HG, HG1G2, SHG1G2. Default is SHG1G2.
-    version: str
+    version: str, optional
         Version number of the table. By default YYYY.MM.
 
     Returns
@@ -439,10 +444,10 @@ def build_the_fft(aggregated_filename=None, nproc=80, nmin=50, test=None, model=
     pdf: pd.DataFrame
         Pandas DataFrame with all the FFT data.
     """
-
     if aggregated_filename is not None:
-        df_ztf = spark.read.format('parquet').load(aggregated_data)
+        df_ztf = spark.read.format('parquet').load(aggregated_filename)
     else:
+        print('Reconstructing SSO data...')
         df_ztf = aggregate_sso_data()
 
     print('{:,} SSO objects in Fink'.format(df_ztf.count()))
@@ -454,6 +459,14 @@ def build_the_fft(aggregated_filename=None, nproc=80, nmin=50, test=None, model=
         .cache()
 
     print('{:,} SSO objects with more than {} measurements'.format(df.count(), nmin))
+
+
+    if frac is not None:
+        if frac >= 1:
+            print('`frac` should be between 0 and 1.')
+            sys.exit()
+        df = df.sample(fraction=frac, seed=0).cache()
+        print('SAMPLE: {:,} SSO objects with more than {} measurements'.format(df.count(), nmin))
 
     cols = ['ssnamenr', 'params']
     t0 = time.time()
@@ -481,13 +494,15 @@ def build_the_fft(aggregated_filename=None, nproc=80, nmin=50, test=None, model=
     pdf['sso_name'] = sso_name
     pdf['sso_number'] = sso_number
 
-    pdf['obliquity'] = extract_obliquity(pdf.sso_name, pdf.alpha0, pdf.delta0, bft_file=None)
+    pdf['obliquity'] = extract_obliquity(pdf.sso_name, pdf.alpha0, pdf.delta0, bft_filename=bft_filename)
 
     if version is None:
         now = datetime.datetime.now()
         version = '{}.{:02d}'.format(now.year, now.month)
 
     pdf['version'] = version
+
+    pdf['flag'] = 0
 
     return pdf
 
