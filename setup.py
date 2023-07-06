@@ -33,7 +33,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: Unix",
-        "Development Status :: 1 - Beta",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
     ],
     project_urls={"Source": "https://github.com/astrolabsoftware/fink-spins"},
