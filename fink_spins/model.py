@@ -18,13 +18,18 @@ class Model(ABC):
     colors = ["#15284F", "#F5622E"]
     __dict_band = {"g": 1, "r": 2}
 
-    def __init__(self, band: str, target: str) -> None:
+    def __init__(self, band: str, target: str = None) -> None:
         self.data = pd.read_parquet(f"{Model.data_fink}data/ztf/sso_ZTF.parquet")
         self.target = target
         self.reset_filter(band)
-        self.reset_target(self.target)
+        if target is not None:
+            self.reset_target(self.target)
 
     def reset_target(self, target):
+        if target is None:
+            raise Exception(
+                f"target is None, use 'reset_target' to set a target for this model {self}"
+            )
         # Get ZTF observations
         r = requests.post(
             "https://fink-portal.org/api/v1/sso",
@@ -172,3 +177,20 @@ class sHG1G2(Model):
 
     def mag_dist_eph(self):
         return self.mag_dist(self.pha_eph(), (self.eph["Dobs"], self.eph["Dhelio"]))
+
+    def aspect_angle_extrema(self):
+        ph = np.radians(self.eph.Phase)
+        H, G1, G2, sRA, sDEC, R = self.get_data_model()
+        g = finkus.func_hg1g2(ph, H, G1, G2) - H
+
+        print(self.eph.RA)
+        print(self.eph.DEC)
+        coords_eph = SkyCoord(self.eph.RA, self.eph.DEC, unit=(u.hourangle, u.deg))
+        cosL = finkus.spin_angle(
+            coords_eph.ra.radian,
+            coords_eph.dec.radian,
+            np.radians(sRA),
+            np.radians(sDEC),
+        )
+        s = 2.5 * np.log10(1 - (1 - R) * np.abs(cosL))
+        return g + np.min(s), g + np.max(s)
