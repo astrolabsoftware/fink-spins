@@ -15,6 +15,8 @@
 
 import numpy as np
 import pandas as pd
+import requests
+import io
 
 import rocks
 
@@ -229,6 +231,21 @@ def format_sHG1G2(data_shg1g2: pd.DataFrame, filters: dict) -> pd.DataFrame:
     return data_shg1g2
 
 
+def alt_format_sHG1G2(data_shg1g2: pd.DataFrame, filters: dict) -> pd.DataFrame:
+    dict_rename = {
+        col: f"sHG1G2_{col}" for col in data_shg1g2.columns if col != "ssnamenr"
+    }
+    for filt in filters.keys():
+        dict_rename["H_{}".format(filt)] = "sHG1G2_H_{}".format(filters[filt])
+        dict_rename["errH_{}".format(filt)] = "sHG1G2_dH_{}".format(filters[filt])
+        dict_rename["G1_{}".format(filt)] = "sHG1G2_G1_{}".format(filters[filt])
+        dict_rename["G2_{}".format(filt)] = "sHG1G2_G2_{}".format(filters[filt])
+        dict_rename["errG1_{}".format(filt)] = "sHG1G2_dG1_{}".format(filters[filt])
+        dict_rename["errG2_{}".format(filt)] = "sHG1G2_dG2_{}".format(filters[filt])
+        dict_rename["rms_{}".format(filt)] = "sHG1G2_rms_{}".format(filters[filt])
+    return data_shg1g2.rename(dict_rename, axis="columns")
+
+
 if __name__ == "__main__":
     # Local Configuration
     data_fink = "data/ztf/"
@@ -236,7 +253,14 @@ if __name__ == "__main__":
     # ZTF filters 1: g, 2: r
     filters = {"1": "g", "2": "r"}
 
-    data_shg1g2 = pd.read_parquet(f"{data_fink}sso_fink_SHG1G2.parquet")  # All
+    r = requests.post(
+        "http://157.136.252.46:24000/api/v1/fft",
+        json={"output-format": "parquet"},
+    )
+    data_shg1g2 = pd.read_parquet(io.BytesIO(r.content))
+    # data_shg1g2 = pd.read_parquet(f"{data_fink}sso_fink_SHG1G2_sign.parquet")
+
+    # data_shg1g2 = pd.read_parquet(f"{data_fink}sso_fink_SHG1G2.parquet")  # All
     data_hg1g2 = pd.read_parquet(f"{data_fink}sso_fink_HG1G2.parquet")
     data_hg = pd.read_parquet(f"{data_fink}sso_fink_HG.parquet")
 
@@ -248,7 +272,7 @@ if __name__ == "__main__":
 
     data_hg = format_HG(data_hg, filters)
     data_hg1g2 = format_HG1G2(data_hg1g2, filters)
-    data_shg1g2 = format_sHG1G2(data_shg1g2, filters)
+    data_shg1g2 = alt_format_sHG1G2(data_shg1g2, filters)
 
     # HG with HG1G2
     data_2 = data_hg.merge(data_hg1g2, on="ssnamenr")

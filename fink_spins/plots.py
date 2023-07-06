@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 import fink_utils.sso.spins as finkus
 
-from model import Model, sHG1G2
+from fink_spins.model import Model, sHG1G2
 
 
 def plot_lightcurve(model: Model):
