@@ -181,10 +181,8 @@ class sHG1G2(Model):
     def aspect_angle_extrema(self):
         ph = np.radians(self.eph.Phase)
         H, G1, G2, sRA, sDEC, R = self.get_data_model()
-        g = finkus.func_hg1g2(ph, H, G1, G2) - H
+        g = finkus.func_hg1g2(ph, H, G1, G2)
 
-        print(self.eph.RA)
-        print(self.eph.DEC)
         coords_eph = SkyCoord(self.eph.RA, self.eph.DEC, unit=(u.hourangle, u.deg))
         cosL = finkus.spin_angle(
             coords_eph.ra.radian,
@@ -193,4 +191,5 @@ class sHG1G2(Model):
             np.radians(sDEC),
         )
         s = 2.5 * np.log10(1 - (1 - R) * np.abs(cosL))
+
         return g + np.min(s), g + np.max(s)

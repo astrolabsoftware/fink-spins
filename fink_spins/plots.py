@@ -109,8 +109,8 @@ def plot_ph(ax, model):
         x = model.pha_eph()
         y = model.mag_model(x)
         min_g, max_g = model.aspect_angle_extrema()
-        # ax.plot(model.eph.Phase, min_g, color="grey", zorder=-5)
-        # ax.plot(model.eph.Phase, max_g, color="grey", zorder=-5)
+        ax.plot(model.eph.Phase, min_g, color="grey", zorder=-5)
+        ax.plot(model.eph.Phase, max_g, color="grey", zorder=-5)
     else:
         x = np.radians(model.eph["Phase"])
         y = model.mag_model(x)
