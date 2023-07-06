@@ -25,7 +25,7 @@ def ephemcc(ident, ep, nbd=None, step=None, observer="500", rplane="1", tcoor=5)
         "-name": f"{ident}",
         "-mime": "json",
         "-rplane": rplane,
-        "-tcoor": tcoor,
+        "-tcoor": str(tcoor),
         "-output": "--jd",
         "-observer": observer,
         "-tscale": "UTC",
