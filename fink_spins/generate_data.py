@@ -284,11 +284,7 @@ if __name__ == "__main__":
 
     data_hg = format_HG(data_hg, filters)
     data_hg1g2 = format_HG1G2(data_hg1g2, filters)
-    print(data_shg1g2.columns)
-    print()
     data_shg1g2 = format_ssoft(data_shg1g2, filters)
-
-    print(data_shg1g2.columns)
 
     # HG with HG1G2
     data_2 = data_hg.merge(data_hg1g2, on="ssnamenr")
