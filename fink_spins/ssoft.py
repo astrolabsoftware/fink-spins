@@ -85,7 +85,7 @@ COLUMNS = {
     'fit': {'type': 'int', 'description': 'Code to assess the quality of the fit: 0: success, 1: bad_vals, 2: MiriadeFail, 3: RunTimError, 4: LinalgError'},
     'status': {'type': 'int', 'description': 'Code for quality `status` (least square convergence): -2: failure, -1 : improper input parameters status returned from MINPACK, 0 : the maximum number of function evaluations is exceeded, 1 : gtol termination condition is satisfied, 2 : ftol termination condition is satisfied, 3 : xtol termination condition is satisfied, 4 : Both ftol and xtol termination conditions are satisfied.'},
     'flag': {'type': 'int', 'description': 'TBD'},
-    'version': {'type': 'str', 'description': 'Version of the FFT'},
+    'version': {'type': 'str', 'description': 'Version of the SSOFT'},
 }
 
 @pandas_udf(MapType(StringType(), FloatType()), PandasUDFType.SCALAR)
@@ -417,7 +417,7 @@ def aggregate_sso_data(output_filename=None):
     return df_grouped
 
 
-def build_the_fft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=50, frac=None, model='SHG1G2', version=None) -> pd.DataFrame:
+def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=50, frac=None, model='SHG1G2', version=None) -> pd.DataFrame:
     """ Build the Fink Flat Table from scratch
 
     Parameters
@@ -442,7 +442,7 @@ def build_the_fft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=50
     Returns
     ----------
     pdf: pd.DataFrame
-        Pandas DataFrame with all the FFT data.
+        Pandas DataFrame with all the SSOFT data.
     """
     if aggregated_filename is not None:
         df_ztf = spark.read.format('parquet').load(aggregated_filename)
