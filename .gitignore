@@ -1,0 +1,11 @@
+.coverage
+.coverage.*
+dist/
+*.pyc
+htmlcov
+.ipynb_checkpoints
+.DS_Store
+*.crc
+default.profraw
+.vscode
+data/*
