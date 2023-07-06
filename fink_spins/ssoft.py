@@ -85,7 +85,7 @@ COLUMNS = {
     'fit': {'type': 'int', 'description': 'Code to assess the quality of the fit: 0: success, 1: bad_vals, 2: MiriadeFail, 3: RunTimError, 4: LinalgError'},
     'status': {'type': 'int', 'description': 'Code for quality `status` (least square convergence): -2: failure, -1 : improper input parameters status returned from MINPACK, 0 : the maximum number of function evaluations is exceeded, 1 : gtol termination condition is satisfied, 2 : ftol termination condition is satisfied, 3 : xtol termination condition is satisfied, 4 : Both ftol and xtol termination conditions are satisfied.'},
     'flag': {'type': 'int', 'description': 'TBD'},
-    'version': {'type': 'str', 'description': 'Version of the SSOFT'},
+    'version': {'type': 'str', 'description': 'Version of the SSOFT YYYY.MM'},
 }
 
 @pandas_udf(MapType(StringType(), FloatType()), PandasUDFType.SCALAR)
