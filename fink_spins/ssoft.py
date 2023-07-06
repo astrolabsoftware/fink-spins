@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" This file contains scripts and definition for the Fink BFT
+""" This file contains scripts and definition for the SSO Fink Table
 """
 import io
 import sys
