@@ -15,6 +15,10 @@ The folder `ztf` contains various datasets:
 
 (to be done)
 
+### BFT from SsODNet
+
+get_bft.sh download the SsODNet.bft parquet file
+
 
 ## CHANGELOG
 
