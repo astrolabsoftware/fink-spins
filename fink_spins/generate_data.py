@@ -233,18 +233,28 @@ def format_sHG1G2(data_shg1g2: pd.DataFrame, filters: dict) -> pd.DataFrame:
     return data_shg1g2
 
 
-def alt_format_sHG1G2(data_shg1g2: pd.DataFrame, filters: dict) -> pd.DataFrame:
+def format_ssoft(data_shg1g2: pd.DataFrame, filters: dict) -> pd.DataFrame:
     dict_rename = {
         col: f"sHG1G2_{col}" for col in data_shg1g2.columns if col != "ssnamenr"
     }
     for filt in filters.keys():
-        dict_rename["H_{}".format(filt)] = "sHG1G2_H_{}".format(filters[filt])
-        dict_rename["errH_{}".format(filt)] = "sHG1G2_dH_{}".format(filters[filt])
-        dict_rename["G1_{}".format(filt)] = "sHG1G2_G1_{}".format(filters[filt])
-        dict_rename["G2_{}".format(filt)] = "sHG1G2_G2_{}".format(filters[filt])
-        dict_rename["errG1_{}".format(filt)] = "sHG1G2_dG1_{}".format(filters[filt])
-        dict_rename["errG2_{}".format(filt)] = "sHG1G2_dG2_{}".format(filters[filt])
-        dict_rename["rms_{}".format(filt)] = "sHG1G2_rms_{}".format(filters[filt])
+        dict_rename[f"H_{filt}"] = f"sHG1G2_H_{filters[filt]}"
+        dict_rename[f"err_H_{filt}"] = f"sHG1G2_dH_{filters[filt]}"
+        dict_rename[f"G1_{filt}"] = f"sHG1G2_G1_{filters[filt]}"
+        dict_rename[f"G2_{filt}"] = f"sHG1G2_G2_{filters[filt]}"
+        dict_rename[f"err_G1_{filt}"] = f"sHG1G2_dG1_{filters[filt]}"
+        dict_rename[f"err_G2_{filt}"] = f"sHG1G2_dG2_{filters[filt]}"
+        dict_rename[f"rms_{filt}"] = f"sHG1G2_rms_{filters[filt]}"
+        dict_rename[f"min_phase_{filt}"] = f"sHG1G2_min_phase_{filters[filt]}"
+        dict_rename[f"max_phase_{filt}"] = f"sHG1G2_max_phase_{filters[filt]}"
+        dict_rename[f"n_obs_{filt}"] = f"sHG1G2_n_obs_{filters[filt]}"
+        dict_rename[f"n_days_{filt}"] = f"sHG1G2_n_days_{filters[filt]}"
+
+    dict_rename["alpha0"] = "sHG1G2_RA0"
+    dict_rename["delta0"] = "sHG1G2_DEC0"
+    dict_rename["err_alpha0"] = "sHG1G2_dRA0"
+    dict_rename["err_delta0"] = "sHG1G2_dDEC0"
+
     return data_shg1g2.rename(dict_rename, axis="columns")
 
 
@@ -274,7 +284,11 @@ if __name__ == "__main__":
 
     data_hg = format_HG(data_hg, filters)
     data_hg1g2 = format_HG1G2(data_hg1g2, filters)
-    data_shg1g2 = alt_format_sHG1G2(data_shg1g2, filters)
+    print(data_shg1g2.columns)
+    print()
+    data_shg1g2 = format_ssoft(data_shg1g2, filters)
+
+    print(data_shg1g2.columns)
 
     # HG with HG1G2
     data_2 = data_hg.merge(data_hg1g2, on="ssnamenr")
