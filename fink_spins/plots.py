@@ -206,7 +206,7 @@ def plot_lc_multiband(model: Model, sp=False):
         plot_residuals(ax[1], model, "Date")
 
     plt.tight_layout()
-    save_plot(model, sp, "lc_multiband".format(model.filter))
+    save_plot(model, sp, "lc_multiband")
     plt.show()
 
 
@@ -231,5 +231,5 @@ def plot_phase_multiband(model: Model, sp=False):
         plot_residuals(ax[1], model, "Phase")
 
     plt.tight_layout()
-    save_plot(model, sp, "phase_multiband".format(model.filter))
+    save_plot(model, sp, "phase_multiband")
     plt.show()
