@@ -16,7 +16,7 @@ class Model(ABC):
     data_fink = "../"
     # ZTF Colors and Colors
     colors = ["#15284F", "#F5622E"]
-    __dict_band = {"g": 1, "r": 2}
+    dict_band = {"g": 1, "r": 2}
 
     def __init__(self, band: str, target: str = None) -> None:
         self.data = pd.read_parquet(f"{Model.data_fink}data/ztf/sso_ZTF.parquet")
@@ -51,7 +51,7 @@ class Model(ABC):
 
     def reset_filter(self, band):
         self.filter = band
-        self.int_filter = Model.__dict_band[self.filter]
+        self.int_filter = Model.dict_band[self.filter]
 
     # From apparent magnitude to unit distance
     def dist_reduction(d_obs, d_sun):
@@ -80,14 +80,23 @@ class Model(ABC):
         cond = self.ztf["i:fid"] == self.int_filter
         return self.ztf.loc[cond, "i:magpsf"] - self.mag_dist_ztf()
 
+    def get_chi2red(self):
+        return self.data.loc[
+            self.data.ssnamenr == self.target, f"{self.model_name}_chi2red"
+        ].values[0]
+
 
 class HG(Model):
+    def __init__(self, band: str, target: str = None) -> None:
+        super().__init__(band, target)
+        self.model_name = "HG"
+
     def get_data_model(self):
         H = self.data.loc[
-            self.data.ssnamenr == self.target, "HG_H_{}".format(self.filter)
+            self.data.ssnamenr == self.target, f"{self.model_name}_H_{self.filter}"
         ].values[0]
         G = self.data.loc[
-            self.data.ssnamenr == self.target, "HG_G_{}".format(self.filter)
+            self.data.ssnamenr == self.target, f"{self.model_name}_G_{self.filter}"
         ].values[0]
         return H, G
 
@@ -97,15 +106,19 @@ class HG(Model):
 
 
 class HG1G2(Model):
+    def __init__(self, band: str, target: str = None) -> None:
+        super().__init__(band, target)
+        self.model_name = "HG1G2"
+
     def get_data_model(self):
         H = self.data.loc[
-            self.data.ssnamenr == self.target, "HG1G2_H_{}".format(self.filter)
+            self.data.ssnamenr == self.target, f"{self.model_name}_H_{self.filter}"
         ].values[0]
         G1 = self.data.loc[
-            self.data.ssnamenr == self.target, "HG1G2_G1_{}".format(self.filter)
+            self.data.ssnamenr == self.target, f"{self.model_name}_G1_{self.filter}"
         ].values[0]
         G2 = self.data.loc[
-            self.data.ssnamenr == self.target, "HG1G2_G2_{}".format(self.filter)
+            self.data.ssnamenr == self.target, f"{self.model_name}_G2_{self.filter}"
         ].values[0]
         return H, G1, G2
 
@@ -115,19 +128,29 @@ class HG1G2(Model):
 
 
 class sHG1G2(Model):
+    def __init__(self, band: str, target: str = None) -> None:
+        super().__init__(band, target)
+        self.model_name = "sHG1G2"
+
     def get_data_model(self):
         H = self.data.loc[
-            self.data.ssnamenr == self.target, f"sHG1G2_H_{self.filter}"
+            self.data.ssnamenr == self.target, f"{self.model_name}_H_{self.filter}"
         ].values[0]
         G1 = self.data.loc[
-            self.data.ssnamenr == self.target, f"sHG1G2_G1_{self.filter}"
+            self.data.ssnamenr == self.target, f"{self.model_name}_G1_{self.filter}"
         ].values[0]
         G2 = self.data.loc[
-            self.data.ssnamenr == self.target, f"sHG1G2_G2_{self.filter}"
+            self.data.ssnamenr == self.target, f"{self.model_name}_G2_{self.filter}"
         ].values[0]
-        sRA = self.data.loc[self.data.ssnamenr == self.target, "sHG1G2_RA0"].values[0]
-        sDEC = self.data.loc[self.data.ssnamenr == self.target, "sHG1G2_DEC0"].values[0]
-        R = self.data.loc[self.data.ssnamenr == self.target, "sHG1G2_R"].values[0]
+        sRA = self.data.loc[
+            self.data.ssnamenr == self.target, f"{self.model_name}_RA0"
+        ].values[0]
+        sDEC = self.data.loc[
+            self.data.ssnamenr == self.target, f"{self.model_name}_DEC0"
+        ].values[0]
+        R = self.data.loc[
+            self.data.ssnamenr == self.target, f"{self.model_name}_R"
+        ].values[0]
         return H, G1, G2, sRA, sDEC, R
 
     def pha_eph(self):
