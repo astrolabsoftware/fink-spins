@@ -182,8 +182,8 @@ def format_sHG1G2(data_shg1g2: pd.DataFrame, filters: dict) -> pd.DataFrame:
     Index(['ssnamenr', 'sHG1G2_H_g', 'sHG1G2_dH_g', 'sHG1G2_G1_g', 'sHG1G2_dG1_g',
            'sHG1G2_G2_g', 'sHG1G2_dG2_g', 'sHG1G2_rms_g', 'sHG1G2_H_r',
            'sHG1G2_dH_r', 'sHG1G2_G1_r', 'sHG1G2_dG1_r', 'sHG1G2_G2_r',
-           'sHG1G2_dG2_r', 'sHG1G2_rms_r', 'sHG1G2_RA0', 'sHG1G2_dRA0',
-           'sHG1G2_DEC0', 'sHG1G2_dDEC0', 'sHG1G2_R', 'sHG1G2_dR', 'sHG1G2_rms',
+           'sHG1G2_dG2_r', 'sHG1G2_rms_r', 'sHG1G2_alpha0', 'sHG1G2_dalpha0',
+           'sHG1G2_delta0', 'sHG1G2_ddelta0', 'sHG1G2_R', 'sHG1G2_dR', 'sHG1G2_rms',
            'sHG1G2_chi2red', 'sHG1G2_status', 'sHG1G2_fit', 'sHG1G2_minCosLambda',
            'sHG1G2_meanCosLambda', 'sHG1G2_maxCosLambda'],
           dtype='object')
@@ -213,10 +213,10 @@ def format_sHG1G2(data_shg1g2: pd.DataFrame, filters: dict) -> pd.DataFrame:
             "rms_{}".format(filt)
         ]
 
-    data_shg1g2["sHG1G2_RA0"] = np.degrees(data_shg1g2["params"].str["alpha0"])
-    data_shg1g2["sHG1G2_dRA0"] = np.degrees(data_shg1g2["params"].str["erralpha0"])
-    data_shg1g2["sHG1G2_DEC0"] = np.degrees(data_shg1g2["params"].str["delta0"])
-    data_shg1g2["sHG1G2_dDEC0"] = np.degrees(data_shg1g2["params"].str["errdelta0"])
+    data_shg1g2["sHG1G2_alpha0"] = np.degrees(data_shg1g2["params"].str["alpha0"])
+    data_shg1g2["sHG1G2_dalpha0"] = np.degrees(data_shg1g2["params"].str["erralpha0"])
+    data_shg1g2["sHG1G2_delta0"] = np.degrees(data_shg1g2["params"].str["delta0"])
+    data_shg1g2["sHG1G2_ddelta0"] = np.degrees(data_shg1g2["params"].str["errdelta0"])
     data_shg1g2["sHG1G2_R"] = data_shg1g2["params"].str["R"]
     data_shg1g2["sHG1G2_dR"] = data_shg1g2["params"].str["errR"]
 
@@ -250,10 +250,11 @@ def format_ssoft(data_shg1g2: pd.DataFrame, filters: dict) -> pd.DataFrame:
         dict_rename[f"n_obs_{filt}"] = f"sHG1G2_n_obs_{filters[filt]}"
         dict_rename[f"n_days_{filt}"] = f"sHG1G2_n_days_{filters[filt]}"
 
-    dict_rename["alpha0"] = "sHG1G2_RA0"
-    dict_rename["delta0"] = "sHG1G2_DEC0"
-    dict_rename["err_alpha0"] = "sHG1G2_dRA0"
-    dict_rename["err_delta0"] = "sHG1G2_dDEC0"
+    dict_rename["alpha0"] = "sHG1G2_alpha0"
+    dict_rename["delta0"] = "sHG1G2_delta0"
+    dict_rename["err_alpha0"] = "sHG1G2_dalpha0"
+    dict_rename["err_delta0"] = "sHG1G2_ddelta0"
+    dict_rename["err_R"] = "sHG1G2_dR"
 
     return data_shg1g2.rename(dict_rename, axis="columns")
 
@@ -291,6 +292,10 @@ if __name__ == "__main__":
 
     # (HG with HG1G2) with sHG1G2
     data = data_2.merge(data_shg1g2, on="ssnamenr")
+
+    print("--- Output columns ---")
+    print(data.columns)
+    print("------")
 
     print(
         "check data:\n\tlen(HG): {}\n\tlen(HG1G2): {}\n\tlen(sHG1G2): {}\n\tlen(final data format): {}".format(
