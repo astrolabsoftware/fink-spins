@@ -293,7 +293,9 @@ if __name__ == "__main__":
     # (HG with HG1G2) with sHG1G2
     data = data_2.merge(data_shg1g2, on="ssnamenr")
 
+    print("--- Output columns ---")
     print(data.columns)
+    print("------")
 
     print(
         "check data:\n\tlen(HG): {}\n\tlen(HG1G2): {}\n\tlen(sHG1G2): {}\n\tlen(final data format): {}".format(
