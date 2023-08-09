@@ -2,14 +2,13 @@
 
 ### ZTF
 
-(to be written: explain how Fink retrieve data, and how information is extracted).
+In order to generate the dataset, you need to run:
 
-(to be written: dataset boundaries 2019/11 to 202306)
+```python
+python fink_spins/generate_data.py --verbose -version 2023.08
+```
 
-The folder `ztf` contains various datasets:
-- `ztf/sso_fink_HG.parquet`: HG model using ZTF only data 
-- `ztf/sso_fink_HG1G2.parquet`: HG1G2 model using ZTF only data
-- `ztf/sso_fink_SHG1G2.parquet`: HG1G2 + spin model using ZTF only data
+This will download the SSOFT for all flavors (SHG1G2, HG1G2, and HG), and build the master table.
 
 ### ZTF x ATLAS
 
@@ -25,3 +24,4 @@ get_bft.sh download the SsODNet.bft parquet file
 |When| What|
 |----|-----|
 |2023/07/04 | Initial dataset from fink-tutorials@spins |
+|2023/08/09 | Dataset from the SSOFT |

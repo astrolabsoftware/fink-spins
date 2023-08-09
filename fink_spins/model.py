@@ -130,7 +130,7 @@ class HG1G2(Model):
 class sHG1G2(Model):
     def __init__(self, band: str, target: str = None) -> None:
         super().__init__(band, target)
-        self.model_name = "sHG1G2"
+        self.model_name = "SHG1G2"
 
     def get_data_model(self):
         H = self.data.loc[
@@ -143,10 +143,10 @@ class sHG1G2(Model):
             self.data.ssnamenr == self.target, f"{self.model_name}_G2_{self.filter}"
         ].values[0]
         sRA = self.data.loc[
-            self.data.ssnamenr == self.target, f"{self.model_name}_RA0"
+            self.data.ssnamenr == self.target, f"{self.model_name}_alpha0"
         ].values[0]
         sDEC = self.data.loc[
-            self.data.ssnamenr == self.target, f"{self.model_name}_DEC0"
+            self.data.ssnamenr == self.target, f"{self.model_name}_delta0"
         ].values[0]
         R = self.data.loc[
             self.data.ssnamenr == self.target, f"{self.model_name}_R"
