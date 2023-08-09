@@ -21,7 +21,6 @@
 %% Matplotlib used the following preamble
 %%   \usepackage{amsmath} \usepackage[utf8x]{inputenc} \usepackage[T1]{fontenc} \usepackage{txfonts} \usepackage[default]{sourcesanspro} \usepackage{pgfplots} \usepgfplotslibrary{external} \tikzexternalize \usepackage{xcolor} 
 %%   \usepackage{fontspec}
-%%   \makeatletter\@ifpackageloaded{underscore}{}{\usepackage[strings]{underscore}}\makeatother
 %%
 \begingroup%
 \makeatletter%

@@ -7,9 +7,18 @@ import matplotlib.pyplot as plt
 # import fink_utils.sso.spins as finkus
 
 from fink_spins.model import Model, sHG1G2
+import os
 
 
-def plot_lightcurve(model: Model):
+def save_plot(model: Model, save_plot, custom_title):
+    if save_plot:
+        if not os.path.isdir("plots"):
+            os.mkdir("plots")
+        plt.savefig("plots/{}_{}.png".format(model.target, custom_title))
+        plt.savefig("plots/{}_{}.pgf".format(model.target, custom_title))
+
+
+def plot_lightcurve(model: Model, sp=False):
     # Mag vs Time
     _, ax = plt.subplots(
         2,
@@ -25,45 +34,31 @@ def plot_lightcurve(model: Model):
         #     'height_ratios': [2,1]}
     )
     plot_lc(ax[0], model)
-    ax[0].set_title("lightcurve")
-
     plot_residuals(ax[1], model, "Date")
-    ax[1].set_title("residuals")
 
-    plt.legend()
     plt.tight_layout()
+    save_plot(model, sp, "lc_{}_band".format(model.filter))
     plt.show()
 
 
-def plot_phase(model: Model):
+def plot_phase(model: Model, sp=False):
     # Mag vs Time
     _, ax = plt.subplots(
         2,
         1,
-        figsize=(12, 12),  # fs.figsize(1),
+        figsize=(12, 12),
         sharex=True,
-        # gridspec_kw={
-        #     'top':0.995,
-        #     'left':0.075,
-        #     'right':0.995,
-        #     'bottom':0.085,
-        #     'hspace':0.02,
-        #     'height_ratios': [2,1]}
     )
     plot_ph(ax[0], model)
-
-    ax[0].set_title("lightcurve")
-    ax[0].invert_yaxis()
-
     plot_residuals(ax[1], model, "Phase")
-    ax[1].set_title("residuals")
 
     plt.legend()
     plt.tight_layout()
+    save_plot(model, sp, "phase_{}_band".format(model.filter))
     plt.show()
 
 
-def plot_lc(ax, model):
+def plot_lc(ax, model: Model):
     cond = model.ztf["i:fid"] == model.int_filter
 
     # plot observations
@@ -83,8 +78,12 @@ def plot_lc(ax, model):
         pred_mag,
         color=Model.colors[model.int_filter - 1],
         linestyle="dotted",
-        label="HG",
+        label="{} prediction".format(model.model_name),
     )
+
+    ax.set_ylabel("H: Absolute Magnitude")
+    ax.set_title("lightcurve")
+    ax.legend()
 
 
 def plot_ph(ax, model):
@@ -104,46 +103,16 @@ def plot_ph(ax, model):
     )
     # fmt: on
 
+    ax.set_title("phase")
+    ax.invert_yaxis()
+
     # plot model predictions
     if isinstance(model, sHG1G2):
         x = model.pha_eph()
         y = model.mag_model(x)
-        # _, G1, G2, sRA, sDEC, _ = model.get_data_model()
-
-        # # Compute Lambda
-        # coords = SkyCoord(
-        #     model.ztf["i:ra"], model.ztf["i:dec"], unit=(u.hourangle, u.deg)
-        # )
-
-        # ra = np.radians(coords.ra.deg)
-        # dec = np.radians(coords.dec.deg)
-        # cos_lambda = np.sin(dec) * np.sin(sDEC) + np.cos(dec) * np.cos(sDEC) * np.cos(
-        #     ra - sRA
-        # )
-        # idx_mincos = np.argmin(cos_lambda)
-        # idx_maxcos = np.argmax(cos_lambda)
-        # x_min = [x[0, idx_mincos], x[1, idx_mincos], x[2, idx_mincos]]
-        # x_max = [x[0, idx_maxcos], x[1, idx_maxcos], x[2, idx_maxcos]]
-        # min_hg1g2 = finkus.func_hg1g2(
-        #     np.radians(model.eph["Phase"]), model.mag_model(x_min), G1, G2
-        # )
-        # max_hg1g2 = finkus.func_hg1g2(
-        #     np.radians(model.eph["Phase"]), model.mag_model(x_min), G1, G2
-        # )
-        # ax[0].plot(
-        #     model.eph["Phase"],
-        #     min_hg1g2,
-        #     color=Model.colors[model.int_filter - 1],
-        #     linestyle="dotted",
-        #     label="min H",
-        # )
-        # ax[0].plot(
-        #     model.eph["Phase"],
-        #     max_hg1g2,
-        #     color=Model.colors[model.int_filter - 1],
-        #     linestyle="dotted",
-        #     label="max H",
-        # )
+        min_g, max_g = model.aspect_angle_extrema()
+        ax.plot(model.eph.Phase, min_g, color="grey", zorder=-5)
+        ax.plot(model.eph.Phase, max_g, color="grey", zorder=-5)
     else:
         x = np.radians(model.eph["Phase"])
         y = model.mag_model(x)
@@ -153,37 +122,38 @@ def plot_ph(ax, model):
         y,
         color=Model.colors[model.int_filter - 1],
         linestyle="dotted",
-        label="HG",
     )
 
+    ax.set_ylabel("H: Absolute Magnitude")
+    ax.legend()
 
-def plot_residuals(ax, model, x_col):
+
+def plot_residuals(ax, model: Model, x_col):
     cond = model.ztf["i:fid"] == model.int_filter
 
     # plot residuals
     residuals = model.residuals()
+    chi2red = model.get_chi2red()
     ax.scatter(
         model.ztf.loc[cond, x_col],
         residuals,
         color=Model.colors[model.int_filter - 1],
         alpha=0.1,
         marker="s",
-        label="HG",
+        label=f"{model.filter} band",
     )
+    ax.axhline(0, color="lightgray", zorder=-100)
+    ax.set_title("residuals, chi2red={:.4f}".format(chi2red))
+    ax.set_xlabel(x_col)
+    ax.set_ylabel("Residuals")
+    ax.legend()
 
 
-def compare_model_lc(hg, hg1g2, shg1g2, band):
+def compare_model_lc(hg, hg1g2, shg1g2, band, sp=False):
     _, ax = plt.subplots(
         2,
         3,
-        figsize=(15, 12),  # fs.figsize(1),
-        # gridspec_kw={
-        #     'top':0.995,
-        #     'left':0.075,
-        #     'right':0.995,
-        #     'bottom':0.085,
-        #     'hspace':0.02,
-        #     'height_ratios': [2,1]}
+        figsize=(15, 12),
     )
 
     for i, model in enumerate([hg, hg1g2, shg1g2]):
@@ -193,21 +163,15 @@ def compare_model_lc(hg, hg1g2, shg1g2, band):
 
     plt.legend()
     plt.tight_layout()
+    save_plot(model, sp, "lc_multimodel_{}_band".format(model.filter))
     plt.show()
 
 
-def compare_model_phase(hg, hg1g2, shg1g2, band):
+def compare_model_phase(hg, hg1g2, shg1g2, band, sp=False):
     _, ax = plt.subplots(
         2,
         3,
-        figsize=(15, 12),  # fs.figsize(1),
-        # gridspec_kw={
-        #     'top':0.995,
-        #     'left':0.075,
-        #     'right':0.995,
-        #     'bottom':0.085,
-        #     'hspace':0.02,
-        #     'height_ratios': [2,1]}
+        figsize=(15, 12),
     )
 
     for i, model in enumerate([hg, hg1g2, shg1g2]):
@@ -217,4 +181,55 @@ def compare_model_phase(hg, hg1g2, shg1g2, band):
 
     plt.legend()
     plt.tight_layout()
+    save_plot(model, sp, "phase_multimodel_{}_band".format(model.filter))
+    plt.show()
+
+
+def plot_lc_multiband(model: Model, sp=False):
+    # Mag vs Time
+    _, ax = plt.subplots(
+        2,
+        1,
+        figsize=(12, 12),  # fs.figsize(1),
+        sharex=True,
+        # gridspec_kw={
+        #     'top':0.995,
+        #     'left':0.075,
+        #     'right':0.995,
+        #     'bottom':0.085,
+        #     'hspace':0.02,
+        #     'height_ratios': [2,1]}
+    )
+    for filter in Model.dict_band.keys():
+        model.reset_filter(filter)
+        plot_lc(ax[0], model)
+        plot_residuals(ax[1], model, "Date")
+
+    plt.tight_layout()
+    save_plot(model, sp, "lc_multiband")
+    plt.show()
+
+
+def plot_phase_multiband(model: Model, sp=False):
+    # Mag vs Time
+    _, ax = plt.subplots(
+        2,
+        1,
+        figsize=(12, 12),  # fs.figsize(1),
+        sharex=True,
+        # gridspec_kw={
+        #     'top':0.995,
+        #     'left':0.075,
+        #     'right':0.995,
+        #     'bottom':0.085,
+        #     'hspace':0.02,
+        #     'height_ratios': [2,1]}
+    )
+    for filter in Model.dict_band.keys():
+        model.reset_filter(filter)
+        plot_ph(ax[0], model)
+        plot_residuals(ax[1], model, "Phase")
+
+    plt.tight_layout()
+    save_plot(model, sp, "phase_multiband")
     plt.show()
