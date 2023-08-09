@@ -18,6 +18,7 @@ import argparse
 import logging
 import io
 import sys
+import os
 
 import numpy as np
 import pandas as pd
@@ -115,6 +116,7 @@ if __name__ == "__main__":
         help="If specified, print on screen information about the processing.")
     args = parser.parse_args(None)
 
+    os.makedirs(args.output_dir, exist_ok=True)
     # ZTF filters 1: g, 2: r
     filters = {"1": "g", "2": "r"}
 
