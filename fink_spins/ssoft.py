@@ -43,26 +43,8 @@ COLUMNS = {
     'last_jd': {'type': 'double', 'description': 'Julian Date for the last detection in Fink, in UTC'},
     'H_1': {'type': 'double', 'description': 'Absolute magnitude for the ZTF filter band g'},
     'H_2': {'type': 'double', 'description': 'Absolute magnitude for the ZTF filter band r'},
-    'G1_1': {'type': 'double', 'description': 'G1 phase parameter for the ZTF filter band g'},
-    'G1_2': {'type': 'double', 'description': 'G1 phase parameter for the ZTF filter band r'},
-    'G2_1': {'type': 'double', 'description': 'G2 phase parameter for the ZTF filter band g'},
-    'G2_2': {'type': 'double', 'description': 'G2 phase parameter for the ZTF filter band r'},
-    'R': {'type': 'double', 'description': 'Oblateness of the object'},
-    'alpha0': {'type': 'double', 'description': 'Right ascension of the spin axis (EQJ2000), in degree'},
-    'delta0': {'type': 'double', 'description': 'Declination of the spin axis (EQJ2000), in degree'},
-    'obliquity': {'type': 'double', 'description': 'Obliquity of the spin axis, in degree'},
     'err_H_1': {'type': 'double', 'description': 'Uncertainty on the absolute magnitude for the ZTF filter band g'},
     'err_H_2': {'type': 'double', 'description': 'Uncertainty on the absolute magnitude for the ZTF filter band r'},
-    'err_G1_1': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band g'},
-    'err_G1_2': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band r'},
-    'err_G2_1': {'type': 'double', 'description': 'Uncertainty on the G2 phase parameter for the ZTF filter band g'},
-    'err_G2_2': {'type': 'double', 'description': 'Uncertainty on the G2 phase parameter for the ZTF filter band r'},
-    'err_R': {'type': 'double', 'description': 'Uncertainty on the oblateness'},
-    'err_alpha0': {'type': 'double', 'description': 'Uncertainty on the right ascension of the spin axis (EQJ2000), in degree'},
-    'err_delta0': {'type': 'double', 'description': 'Uncertainty on the declination of the spin axis (EQJ2000), in degree'},
-    'max_cos_lambda': {'type': 'double', 'description': 'Maximum of the absolute value of the cosine for the aspect angle'},
-    'mean_cos_lambda': {'type': 'double', 'description': 'Mean of the absolute value of the cosine for the aspect angle'},
-    'min_cos_lambda': {'type': 'double', 'description': 'Minimum of the absolute value of the cosine for the aspect angle'},
     'min_phase': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function, in degree'},
     'min_phase_1': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function for the ZTF filter band g, in degree'},
     'min_phase_2': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function for the ZTF filter band r, in degree'},
@@ -87,6 +69,45 @@ COLUMNS = {
     'status': {'type': 'int', 'description': 'Code for quality `status` (least square convergence): -2: failure, -1 : improper input parameters status returned from MINPACK, 0 : the maximum number of function evaluations is exceeded, 1 : gtol termination condition is satisfied, 2 : ftol termination condition is satisfied, 3 : xtol termination condition is satisfied, 4 : Both ftol and xtol termination conditions are satisfied.'},
     'flag': {'type': 'int', 'description': 'TBD'},
     'version': {'type': 'str', 'description': 'Version of the SSOFT YYYY.MM'},
+}
+
+COLUMNS_SHG1G2 = {
+    'G1_1': {'type': 'double', 'description': 'G1 phase parameter for the ZTF filter band g'},
+    'G1_2': {'type': 'double', 'description': 'G1 phase parameter for the ZTF filter band r'},
+    'G2_1': {'type': 'double', 'description': 'G2 phase parameter for the ZTF filter band g'},
+    'G2_2': {'type': 'double', 'description': 'G2 phase parameter for the ZTF filter band r'},
+    'R': {'type': 'double', 'description': 'Oblateness of the object'},
+    'alpha0': {'type': 'double', 'description': 'Right ascension of the spin axis (EQJ2000), in degree'},
+    'delta0': {'type': 'double', 'description': 'Declination of the spin axis (EQJ2000), in degree'},
+    'obliquity': {'type': 'double', 'description': 'Obliquity of the spin axis, in degree'},
+    'err_G1_1': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band g'},
+    'err_G1_2': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band r'},
+    'err_G2_1': {'type': 'double', 'description': 'Uncertainty on the G2 phase parameter for the ZTF filter band g'},
+    'err_G2_2': {'type': 'double', 'description': 'Uncertainty on the G2 phase parameter for the ZTF filter band r'},
+    'err_R': {'type': 'double', 'description': 'Uncertainty on the oblateness'},
+    'err_alpha0': {'type': 'double', 'description': 'Uncertainty on the right ascension of the spin axis (EQJ2000), in degree'},
+    'err_delta0': {'type': 'double', 'description': 'Uncertainty on the declination of the spin axis (EQJ2000), in degree'},
+    'max_cos_lambda': {'type': 'double', 'description': 'Maximum of the absolute value of the cosine for the aspect angle'},
+    'mean_cos_lambda': {'type': 'double', 'description': 'Mean of the absolute value of the cosine for the aspect angle'},
+    'min_cos_lambda': {'type': 'double', 'description': 'Minimum of the absolute value of the cosine for the aspect angle'},
+}
+
+COLUMNS_HG1G2 = {
+    'G1_1': {'type': 'double', 'description': 'G1 phase parameter for the ZTF filter band g'},
+    'G1_2': {'type': 'double', 'description': 'G1 phase parameter for the ZTF filter band r'},
+    'G2_1': {'type': 'double', 'description': 'G2 phase parameter for the ZTF filter band g'},
+    'G2_2': {'type': 'double', 'description': 'G2 phase parameter for the ZTF filter band r'},
+    'err_G1_1': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band g'},
+    'err_G1_2': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band r'},
+    'err_G2_1': {'type': 'double', 'description': 'Uncertainty on the G2 phase parameter for the ZTF filter band g'},
+    'err_G2_2': {'type': 'double', 'description': 'Uncertainty on the G2 phase parameter for the ZTF filter band r'},
+}
+
+COLUMNS_HG = {
+    'G_1': {'type': 'double', 'description': 'G phase parameter for the ZTF filter band g'},
+    'G_2': {'type': 'double', 'description': 'G phase parameter for the ZTF filter band r'},
+    'err_G_1': {'type': 'double', 'description': 'Uncertainty on the G phase parameter for the ZTF filter band g'},
+    'err_G_2': {'type': 'double', 'description': 'Uncertainty on the G phase parameter for the ZTF filter band r'},
 }
 
 @pandas_udf(MapType(StringType(), FloatType()), PandasUDFType.SCALAR)
