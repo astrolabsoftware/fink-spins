@@ -48,7 +48,7 @@ COLUMNS = {
     'min_phase': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function, in degree'},
     'min_phase_1': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function for the ZTF filter band g, in degree'},
     'min_phase_2': {'type': 'double', 'description': 'Minimum phase angle of the observations used to compute the phase function for the ZTF filter band r, in degree'},
-    'max_hase': {'type': 'double', 'description': 'Maximum phase angle of the observations used to compute the phase function, in degree'},
+    'max_phase': {'type': 'double', 'description': 'Maximum phase angle of the observations used to compute the phase function, in degree'},
     'max_phase_1': {'type': 'double', 'description': 'Maximum phase angle of the observations used to compute the phase function for the ZTF filter band g, in degree'},
     'max_phase_2': {'type': 'double', 'description': 'Maximum phase angle of the observations used to compute the phase function for the ZTF filter band r, in degree'},
     'chi2red': {'type': 'double', 'description': 'Reduced chi-square of the fit'},
