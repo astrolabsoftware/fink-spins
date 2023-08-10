@@ -17,10 +17,8 @@ import requests
 import argparse
 import logging
 import io
-import sys
 import os
 
-import numpy as np
 import pandas as pd
 
 import rocks
