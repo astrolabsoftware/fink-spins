@@ -334,14 +334,14 @@ def extract_obliquity(sso_name, alpha0, delta0, bft_filename=None):
     obliquity: np.array of double
         Obliquity for each object [degree]
     """
+    cols = ['sso_name', 'orbital_elements.node_longitude.value', 'orbital_elements.inclination.value']
     if bft_filename is None:
         print('BFT not found -- downloading...')
         r = requests.get('https://ssp.imcce.fr/data/ssoBFT-latest.parquet')
-        pdf_bft = pd.read_parquet(io.BytesIO(r.content))
+        pdf_bft = pd.read_parquet(io.BytesIO(r.content), columns=cols)
     else:
-        pdf_bft = pd.read_parquet(bft_filename)
+        pdf_bft = pd.read_parquet(bft_filename, columns=cols)
 
-    cols = ['sso_name', 'orbital_elements.node_longitude.value', 'orbital_elements.inclination.value']
     sub = pdf_bft[cols]
 
     pdf = pd.DataFrame(
@@ -395,10 +395,7 @@ def aggregate_sso_data(output_filename=None):
     df_grouped: Spark DataFrame
         Spark DataFrame with aggregated SSO data.
     """
-    spark = SparkSession \
-        .builder \
-        .getOrCreate()
-
+    spark = SparkSession.builder.getOrCreate()
     cols0 = ['candidate.ssnamenr']
     cols = [
         'candidate.ra',
@@ -422,25 +419,25 @@ def aggregate_sso_data(output_filename=None):
     }
 
     df1 = spark.read.format('parquet').option('basePath', 'archive/science').load(epochs['epoch1'])
-    df1.select(cols0 + cols)\
-        .filter(F.col('ssnamenr') != 'null')\
+    df1_agg = df1.select(cols0 + cols)\
+        .filter(F.col('roid') == 3)\
         .groupBy('ssnamenr')\
         .agg(*[F.collect_list(col.split('.')[1]).alias('c' + col.split('.')[1]) for col in cols])
 
     df2 = spark.read.format('parquet').option('basePath', 'archive/science').load(epochs['epoch2'])
-    df2.select(cols0 + cols)\
-        .filter(F.col('ssnamenr') != 'null')\
+    df2_agg = df2.select(cols0 + cols)\
+        .filter(F.col('roid') == 3)\
         .groupBy('ssnamenr')\
         .agg(*[F.collect_list(col.split('.')[1]).alias('c' + col.split('.')[1]) for col in cols])
 
-    df_union = df1.union(df2)
+    df_union = df1_agg.union(df2_agg)
 
     df_grouped = df_union.groupBy('ssnamenr').agg(
         *[F.flatten(F.collect_list('c' + col.split('.')[1])).alias('c' + col.split('.')[1]) for col in cols]
     )
 
     if output_filename is not None:
-        df_grouped.write.parquet('sso_aggregated')
+        df_grouped.write.parquet(output_filename)
 
     return df_grouped
 
@@ -471,15 +468,20 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
     pdf: pd.DataFrame
         Pandas DataFrame with all the SSOFT data.
     """
-    spark = SparkSession \
-        .builder \
-        .getOrCreate()
+    spark = SparkSession.builder.getOrCreate()
+    spark.sparkContext.setLogLevel("WARN")
+
+    if version is None:
+        now = datetime.datetime.now()
+        version = '{}.{:02d}'.format(now.year, now.month)
 
     if aggregated_filename is not None:
         df_ztf = spark.read.format('parquet').load(aggregated_filename)
     else:
         print('Reconstructing SSO data...')
-        df_ztf = aggregate_sso_data()
+        t0 = time.time()
+        df_ztf = aggregate_sso_data(output_filename='sso_aggregated_{}'.format(version))
+        print('Time to reconstruct SSO data: {:.2f} seconds'.format(time.time() - t0))
 
     print('{:,} SSO objects in Fink'.format(df_ztf.count()))
 
@@ -516,7 +518,7 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
             )
         ).select(cols).toPandas()
 
-    print('Time to extract parameters: {:.2f}'.format(time.time() - t0))
+    print('Time to extract parameters: {:.2f} seconds'.format(time.time() - t0))
 
     pdf = pd.concat([pdf, pd.json_normalize(pdf.params)], axis=1).drop('params', axis=1)
 
@@ -524,11 +526,13 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
     pdf['sso_name'] = sso_name
     pdf['sso_number'] = sso_number
 
-    pdf['obliquity'] = extract_obliquity(pdf.sso_name, pdf.alpha0, pdf.delta0, bft_filename=bft_filename)
-
-    if version is None:
-        now = datetime.datetime.now()
-        version = '{}.{:02d}'.format(now.year, now.month)
+    if model == 'SHG1G2':
+        pdf['obliquity'] = extract_obliquity(
+            pdf.sso_name,
+            pdf.alpha0,
+            pdf.delta0,
+            bft_filename=bft_filename
+        )
 
     pdf['version'] = version
 
