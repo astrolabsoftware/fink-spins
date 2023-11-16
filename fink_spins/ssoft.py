@@ -406,40 +406,25 @@ def aggregate_sso_data(output_filename=None):
         'candidate.jd'
     ]
 
-    epochs = {
-        'epoch1': [
-            'archive/science/year=2019',
-            'archive/science/year=2020',
-            'archive/science/year=2021',
-        ],
-        'epoch2': [
-            'archive/science/year=2022',
-            'archive/science/year=2023',
-        ]
-    }
+    epochs = [
+        'archive/science/year=2019',
+        'archive/science/year=2020',
+        'archive/science/year=2021',
+        'archive/science/year=2022',
+        'archive/science/year=2023',
+    ]
 
-    df1 = spark.read.format('parquet').option('basePath', 'archive/science').load(epochs['epoch1'])
-    df1_agg = df1.select(cols0 + cols)\
+    df = spark.read.format('parquet').option('basePath', 'archive/science').load(epochs)
+    df_agg = df.select(cols0 + cols)\
         .filter(F.col('roid') == 3)\
         .groupBy('ssnamenr')\
         .agg(*[F.collect_list(col.split('.')[1]).alias('c' + col.split('.')[1]) for col in cols])
 
-    df2 = spark.read.format('parquet').option('basePath', 'archive/science').load(epochs['epoch2'])
-    df2_agg = df2.select(cols0 + cols)\
-        .filter(F.col('roid') == 3)\
-        .groupBy('ssnamenr')\
-        .agg(*[F.collect_list(col.split('.')[1]).alias('c' + col.split('.')[1]) for col in cols])
-
-    df_union = df1_agg.union(df2_agg)
-
-    df_grouped = df_union.groupBy('ssnamenr').agg(
-        *[F.flatten(F.collect_list('c' + col.split('.')[1])).alias('c' + col.split('.')[1]) for col in cols]
-    )
 
     if output_filename is not None:
-        df_grouped.write.parquet(output_filename)
+        df_agg.write.parquet(output_filename)
 
-    return df_grouped
+    return df_agg
 
 def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=50, frac=None, model='SHG1G2', version=None) -> pd.DataFrame:
     """ Build the Fink Flat Table from scratch
