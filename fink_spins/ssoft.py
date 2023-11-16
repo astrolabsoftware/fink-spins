@@ -15,6 +15,7 @@
 """ This file contains scripts and definition for the SSO Fink Table
 """
 import io
+import re
 import sys
 import time
 import requests
@@ -114,6 +115,29 @@ COLUMNS_HG = {
     'err_G_1': {'type': 'double', 'description': 'Uncertainty on the G phase parameter for the ZTF filter band g'},
     'err_G_2': {'type': 'double', 'description': 'Uncertainty on the G phase parameter for the ZTF filter band r'},
 }
+
+def process_regex(regex, data):
+    """ Extract parameters from a regex given the data
+
+    Parameters
+    ----------
+    regex: str
+        Regular expression to use
+    data: str
+        Data entered by the user
+
+    Returns
+    ----------
+    parameters: dict or None
+        Parameters (key: value) extracted from the data
+    """
+    template = re.compile(regex)
+    m = template.match(data)
+    if m is None:
+        return None
+
+    parameters = m.groupdict()
+    return parameters
 
 @pandas_udf(MapType(StringType(), FloatType()), PandasUDFType.SCALAR)
 def estimate_sso_params_spark(ssnamenr, magpsf, sigmapsf, jd, fid, ra, dec, method, model):
@@ -254,6 +278,66 @@ def estimate_sso_params_spark(ssnamenr, magpsf, sigmapsf, jd, fid, ra, dec, meth
             out.append(outdic)
     return pd.Series(out)
 
+def correct_ztf_mpc_names(ssnamenr):
+    """ Remove trailing 0 at the end of SSO names from ZTF
+
+    e.g. 2010XY03 should read 2010XY3
+
+    Parameters
+    ----------
+    ssnamenr: np.array
+        Array with SSO names from ZTF
+
+    Returns
+    ----------
+    out: np.array
+        Array with corrected names from ZTF
+
+    Examples
+    ----------
+    >>> ssnamenr = np.array(['2010XY03', '345', '2023UY12'])
+    >>> ssnamenr_alt = correct_ztf_mpc_names(ssnamenr)
+
+    # only the first one changed
+    >>> assert ssnamenr_alt[0] == '2010XY3'
+
+    >>> assert np.all(ssnamenr_alt[1:] == ssnamenr[1:])
+    """
+    # remove numbered
+    regex = "^\d+$"
+    template = re.compile(regex)
+    unnumbered = np.array([template.findall(str(x)) == [] for x in ssnamenr])
+
+    # Extract names
+    regex = "(?P<year>\d{4})(?P<letter>\w{2})(?P<end>\d+)$"
+    processed = [process_regex(regex, x) for x in ssnamenr[unnumbered]]
+
+    def f(x, y):
+        """ Correct for trailing 0 in SSO names
+
+        Parameters
+        ----------
+        x: dict, or None
+            Data extracted from the regex
+        y: str
+            Corresponding ssnamenr
+
+        Returns
+        ----------
+        out: str
+            Name corrected for trailing 0 at the end (e.g. 2010XY03 should read 2010XY3)
+        """
+        if x is None:
+            return y
+        else:
+            return "{}{}{}".format(x['year'], x['letter'], x['end'].replace('0', ''))
+
+    corrected = np.array([f(x, y) for x,y in zip(processed, ssnamenr[unnumbered])])
+
+    ssnamenr[unnumbered] = corrected
+
+    return ssnamenr
+
 def rockify(ssnamenr: pd.Series):
     """ Extract names and numbers from ssnamenr
 
@@ -269,7 +353,12 @@ def rockify(ssnamenr: pd.Series):
     sso_number: np.array of int
         SSO numbers according to quaero
     """
-    names_numbers = rocks.identify(ssnamenr)
+    # prune names
+    ssnamenr_alt = correct_ztf_mpc_names(ssnamenr.values)
+
+
+    # rockify
+    names_numbers = rocks.identify(ssnamenr_alt)
 
     sso_name = np.transpose(names_numbers)[0]
     sso_number = np.transpose(names_numbers)[1]
@@ -523,3 +612,10 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
     pdf['flag'] = 0
 
     return pdf
+
+
+if __name__ == "__main__":
+    """
+    """
+    import doctest
+    sys.exit(doctest.testmod()[0])
