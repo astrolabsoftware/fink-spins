@@ -406,15 +406,7 @@ def aggregate_sso_data(output_filename=None):
         'candidate.jd'
     ]
 
-    epochs = [
-        'archive/science/year=2019',
-        'archive/science/year=2020',
-        'archive/science/year=2021',
-        'archive/science/year=2022',
-        'archive/science/year=2023',
-    ]
-
-    df = spark.read.format('parquet').option('basePath', 'archive/science').load(epochs)
+    df = spark.read.format('parquet').option('basePath', 'archive/science').load('archive/science')
     df_agg = df.select(cols0 + cols)\
         .filter(F.col('roid') == 3)\
         .groupBy('ssnamenr')\
