@@ -82,6 +82,8 @@ COLUMNS_SHG1G2 = {
     'R': {'type': 'double', 'description': 'Oblateness of the object'},
     'alpha0': {'type': 'double', 'description': 'Right ascension of the spin axis (EQJ2000), in degree'},
     'delta0': {'type': 'double', 'description': 'Declination of the spin axis (EQJ2000), in degree'},
+    'alpha0_alt': {'type': 'double', 'description': 'Flipped `alpha0`: (`alpha0` + 180) modulo 360, in degree'},
+    'delta0_alt': {'type': 'double', 'description': 'Flipped `delta0`: -`delta0`, in degree'},
     'obliquity': {'type': 'double', 'description': 'Obliquity of the spin axis, in degree'},
     'err_G1_1': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band g'},
     'err_G1_2': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band r'},
@@ -504,12 +506,17 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
     pdf['sso_number'] = sso_number
 
     if model == 'SHG1G2':
+        # compute obliquity
         pdf['obliquity'] = extract_obliquity(
             pdf.sso_name,
             pdf.alpha0,
             pdf.delta0,
             bft_filename=bft_filename
         )
+
+        # add flipped spins
+        pdf['alpha0_alt'] = (pdf['alpha0'] + 180) % 360
+        pdf['delta0_alt'] = - pdf['delta0']
 
     pdf['version'] = version
 
