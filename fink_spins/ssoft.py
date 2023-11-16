@@ -332,7 +332,7 @@ def correct_ztf_mpc_names(ssnamenr):
         else:
             return "{}{}{}".format(x['year'], x['letter'], x['end'].replace('0', ''))
 
-    corrected = np.array([f(x, y) for x,y in zip(processed, ssnamenr[unnumbered])])
+    corrected = np.array([f(x, y) for x, y in zip(processed, ssnamenr[unnumbered])])
 
     ssnamenr[unnumbered] = corrected
 
@@ -355,7 +355,6 @@ def rockify(ssnamenr: pd.Series):
     """
     # prune names
     ssnamenr_alt = correct_ztf_mpc_names(ssnamenr.values)
-
 
     # rockify
     names_numbers = rocks.identify(ssnamenr_alt)
@@ -502,7 +501,6 @@ def aggregate_sso_data(output_filename=None):
         .filter(F.col('roid') == 3)\
         .groupBy('ssnamenr')\
         .agg(*[F.collect_list(col.split('.')[1]).alias('c' + col.split('.')[1]) for col in cols])
-
 
     if output_filename is not None:
         df_agg.write.parquet(output_filename)
