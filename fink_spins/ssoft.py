@@ -15,6 +15,7 @@
 """ This file contains scripts and definition for the SSO Fink Table
 """
 import io
+import re
 import sys
 import time
 import requests
@@ -82,6 +83,8 @@ COLUMNS_SHG1G2 = {
     'R': {'type': 'double', 'description': 'Oblateness of the object'},
     'alpha0': {'type': 'double', 'description': 'Right ascension of the spin axis (EQJ2000), in degree'},
     'delta0': {'type': 'double', 'description': 'Declination of the spin axis (EQJ2000), in degree'},
+    'alpha0_alt': {'type': 'double', 'description': 'Flipped `alpha0`: (`alpha0` + 180) modulo 360, in degree'},
+    'delta0_alt': {'type': 'double', 'description': 'Flipped `delta0`: -`delta0`, in degree'},
     'obliquity': {'type': 'double', 'description': 'Obliquity of the spin axis, in degree'},
     'err_G1_1': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band g'},
     'err_G1_2': {'type': 'double', 'description': 'Uncertainty on the G1 phase parameter for the ZTF filter band r'},
@@ -112,6 +115,29 @@ COLUMNS_HG = {
     'err_G_1': {'type': 'double', 'description': 'Uncertainty on the G phase parameter for the ZTF filter band g'},
     'err_G_2': {'type': 'double', 'description': 'Uncertainty on the G phase parameter for the ZTF filter band r'},
 }
+
+def process_regex(regex, data):
+    """ Extract parameters from a regex given the data
+
+    Parameters
+    ----------
+    regex: str
+        Regular expression to use
+    data: str
+        Data entered by the user
+
+    Returns
+    ----------
+    parameters: dict or None
+        Parameters (key: value) extracted from the data
+    """
+    template = re.compile(regex)
+    m = template.match(data)
+    if m is None:
+        return None
+
+    parameters = m.groupdict()
+    return parameters
 
 @pandas_udf(MapType(StringType(), FloatType()), PandasUDFType.SCALAR)
 def estimate_sso_params_spark(ssnamenr, magpsf, sigmapsf, jd, fid, ra, dec, method, model):
@@ -252,6 +278,66 @@ def estimate_sso_params_spark(ssnamenr, magpsf, sigmapsf, jd, fid, ra, dec, meth
             out.append(outdic)
     return pd.Series(out)
 
+def correct_ztf_mpc_names(ssnamenr):
+    """ Remove trailing 0 at the end of SSO names from ZTF
+
+    e.g. 2010XY03 should read 2010XY3
+
+    Parameters
+    ----------
+    ssnamenr: np.array
+        Array with SSO names from ZTF
+
+    Returns
+    ----------
+    out: np.array
+        Array with corrected names from ZTF
+
+    Examples
+    ----------
+    >>> ssnamenr = np.array(['2010XY03', '345', '2023UY12'])
+    >>> ssnamenr_alt = correct_ztf_mpc_names(ssnamenr)
+
+    # only the first one changed
+    >>> assert ssnamenr_alt[0] == '2010XY3'
+
+    >>> assert np.all(ssnamenr_alt[1:] == ssnamenr[1:])
+    """
+    # remove numbered
+    regex = "^\d+$"
+    template = re.compile(regex)
+    unnumbered = np.array([template.findall(str(x)) == [] for x in ssnamenr])
+
+    # Extract names
+    regex = "(?P<year>\d{4})(?P<letter>\w{2})(?P<end>\d+)$"
+    processed = [process_regex(regex, x) for x in ssnamenr[unnumbered]]
+
+    def f(x, y):
+        """ Correct for trailing 0 in SSO names
+
+        Parameters
+        ----------
+        x: dict, or None
+            Data extracted from the regex
+        y: str
+            Corresponding ssnamenr
+
+        Returns
+        ----------
+        out: str
+            Name corrected for trailing 0 at the end (e.g. 2010XY03 should read 2010XY3)
+        """
+        if x is None:
+            return y
+        else:
+            return "{}{}{}".format(x['year'], x['letter'], x['end'].replace('0', ''))
+
+    corrected = np.array([f(x, y) for x, y in zip(processed, ssnamenr[unnumbered])])
+
+    ssnamenr[unnumbered] = corrected
+
+    return ssnamenr
+
 def rockify(ssnamenr: pd.Series):
     """ Extract names and numbers from ssnamenr
 
@@ -267,7 +353,11 @@ def rockify(ssnamenr: pd.Series):
     sso_number: np.array of int
         SSO numbers according to quaero
     """
-    names_numbers = rocks.identify(ssnamenr)
+    # prune names
+    ssnamenr_alt = correct_ztf_mpc_names(ssnamenr.values)
+
+    # rockify
+    names_numbers = rocks.identify(ssnamenr_alt)
 
     sso_name = np.transpose(names_numbers)[0]
     sso_number = np.transpose(names_numbers)[1]
@@ -334,14 +424,14 @@ def extract_obliquity(sso_name, alpha0, delta0, bft_filename=None):
     obliquity: np.array of double
         Obliquity for each object [degree]
     """
+    cols = ['sso_name', 'orbital_elements.node_longitude.value', 'orbital_elements.inclination.value']
     if bft_filename is None:
         print('BFT not found -- downloading...')
         r = requests.get('https://ssp.imcce.fr/data/ssoBFT-latest.parquet')
-        pdf_bft = pd.read_parquet(io.BytesIO(r.content))
+        pdf_bft = pd.read_parquet(io.BytesIO(r.content), columns=cols)
     else:
-        pdf_bft = pd.read_parquet(bft_filename)
+        pdf_bft = pd.read_parquet(bft_filename, columns=cols)
 
-    cols = ['sso_name', 'orbital_elements.node_longitude.value', 'orbital_elements.inclination.value']
     sub = pdf_bft[cols]
 
     pdf = pd.DataFrame(
@@ -395,10 +485,7 @@ def aggregate_sso_data(output_filename=None):
     df_grouped: Spark DataFrame
         Spark DataFrame with aggregated SSO data.
     """
-    spark = SparkSession \
-        .builder \
-        .getOrCreate()
-
+    spark = SparkSession.builder.getOrCreate()
     cols0 = ['candidate.ssnamenr']
     cols = [
         'candidate.ra',
@@ -409,40 +496,16 @@ def aggregate_sso_data(output_filename=None):
         'candidate.jd'
     ]
 
-    epochs = {
-        'epoch1': [
-            'archive/science/year=2019',
-            'archive/science/year=2020',
-            'archive/science/year=2021',
-        ],
-        'epoch2': [
-            'archive/science/year=2022',
-            'archive/science/year=2023',
-        ]
-    }
-
-    df1 = spark.read.format('parquet').option('basePath', 'archive/science').load(epochs['epoch1'])
-    df1.select(cols0 + cols)\
-        .filter(F.col('ssnamenr') != 'null')\
+    df = spark.read.format('parquet').option('basePath', 'archive/science').load('archive/science')
+    df_agg = df.select(cols0 + cols)\
+        .filter(F.col('roid') == 3)\
         .groupBy('ssnamenr')\
         .agg(*[F.collect_list(col.split('.')[1]).alias('c' + col.split('.')[1]) for col in cols])
-
-    df2 = spark.read.format('parquet').option('basePath', 'archive/science').load(epochs['epoch2'])
-    df2.select(cols0 + cols)\
-        .filter(F.col('ssnamenr') != 'null')\
-        .groupBy('ssnamenr')\
-        .agg(*[F.collect_list(col.split('.')[1]).alias('c' + col.split('.')[1]) for col in cols])
-
-    df_union = df1.union(df2)
-
-    df_grouped = df_union.groupBy('ssnamenr').agg(
-        *[F.flatten(F.collect_list('c' + col.split('.')[1])).alias('c' + col.split('.')[1]) for col in cols]
-    )
 
     if output_filename is not None:
-        df_grouped.write.parquet('sso_aggregated')
+        df_agg.write.parquet(output_filename)
 
-    return df_grouped
+    return df_agg
 
 def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=50, frac=None, model='SHG1G2', version=None) -> pd.DataFrame:
     """ Build the Fink Flat Table from scratch
@@ -471,15 +534,20 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
     pdf: pd.DataFrame
         Pandas DataFrame with all the SSOFT data.
     """
-    spark = SparkSession \
-        .builder \
-        .getOrCreate()
+    spark = SparkSession.builder.getOrCreate()
+    spark.sparkContext.setLogLevel("WARN")
+
+    if version is None:
+        now = datetime.datetime.now()
+        version = '{}.{:02d}'.format(now.year, now.month)
 
     if aggregated_filename is not None:
         df_ztf = spark.read.format('parquet').load(aggregated_filename)
     else:
         print('Reconstructing SSO data...')
-        df_ztf = aggregate_sso_data()
+        t0 = time.time()
+        df_ztf = aggregate_sso_data(output_filename='sso_aggregated_{}'.format(version))
+        print('Time to reconstruct SSO data: {:.2f} seconds'.format(time.time() - t0))
 
     print('{:,} SSO objects in Fink'.format(df_ztf.count()))
 
@@ -516,7 +584,7 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
             )
         ).select(cols).toPandas()
 
-    print('Time to extract parameters: {:.2f}'.format(time.time() - t0))
+    print('Time to extract parameters: {:.2f} seconds'.format(time.time() - t0))
 
     pdf = pd.concat([pdf, pd.json_normalize(pdf.params)], axis=1).drop('params', axis=1)
 
@@ -524,14 +592,28 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
     pdf['sso_name'] = sso_name
     pdf['sso_number'] = sso_number
 
-    pdf['obliquity'] = extract_obliquity(pdf.sso_name, pdf.alpha0, pdf.delta0, bft_filename=bft_filename)
+    if model == 'SHG1G2':
+        # compute obliquity
+        pdf['obliquity'] = extract_obliquity(
+            pdf.sso_name,
+            pdf.alpha0,
+            pdf.delta0,
+            bft_filename=bft_filename
+        )
 
-    if version is None:
-        now = datetime.datetime.now()
-        version = '{}.{:02d}'.format(now.year, now.month)
+        # add flipped spins
+        pdf['alpha0_alt'] = (pdf['alpha0'] + 180) % 360
+        pdf['delta0_alt'] = - pdf['delta0']
 
     pdf['version'] = version
 
     pdf['flag'] = 0
 
     return pdf
+
+
+if __name__ == "__main__":
+    """
+    """
+    import doctest
+    sys.exit(doctest.testmod()[0])
