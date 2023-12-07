@@ -330,7 +330,7 @@ def correct_ztf_mpc_names(ssnamenr):
         if x is None:
             return y
         else:
-            return "{}{}{}".format(x['year'], x['letter'], x['end'].replace('0', ''))
+            return "{}{}{}".format(x['year'], x['letter'], int(x['end']))
 
     corrected = np.array([f(x, y) for x, y in zip(processed, ssnamenr[unnumbered])])
 
@@ -588,7 +588,7 @@ def build_the_ssoft(aggregated_filename=None, bft_filename=None, nproc=80, nmin=
 
     pdf = pd.concat([pdf, pd.json_normalize(pdf.params)], axis=1).drop('params', axis=1)
 
-    sso_name, sso_number = rockify(pdf.ssnamenr)
+    sso_name, sso_number = rockify(pdf.ssnamenr.copy())
     pdf['sso_name'] = sso_name
     pdf['sso_number'] = sso_number
 
