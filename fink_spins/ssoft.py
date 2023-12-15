@@ -116,6 +116,33 @@ COLUMNS_HG = {
     'err_G_2': {'type': 'double', 'description': 'Uncertainty on the G phase parameter for the ZTF filter band r'},
 }
 
+def remove_leading_zeros(val):
+    """ Iteratively remove leading zeros from a string
+
+    Parameters
+    ----------
+    val: str
+        A string
+
+    Returns
+    ----------
+    The input string with leading zeros removed
+
+    Examples
+    ----------
+    >>> string = '0abcd'
+    >>> remove_leading_zeros(string)
+    'abcd'
+
+    >>> string = 'toto'
+    >>> remove_leading_zeros(string)
+    'toto'
+    """
+    if val.startswith('0'):
+        return replace_leading_zeros(val[1:])
+    else:
+        return val
+
 def process_regex(regex, data):
     """ Extract parameters from a regex given the data
 
@@ -295,13 +322,15 @@ def correct_ztf_mpc_names(ssnamenr):
 
     Examples
     ----------
-    >>> ssnamenr = np.array(['2010XY03', '345', '2023UY12'])
+    >>> ssnamenr = np.array(['2010XY03', '2023AB0', '2023XY00', '345', '2023UY12'])
     >>> ssnamenr_alt = correct_ztf_mpc_names(ssnamenr)
 
-    # only the first one changed
+    # the first ones changed
     >>> assert ssnamenr_alt[0] == '2010XY3'
+    >>> assert ssnamenr_alt[1] == '2023AB'
+    >>> assert ssnamenr_alt[2] == '2023XY'
 
-    >>> assert np.all(ssnamenr_alt[1:] == ssnamenr[1:])
+    >>> assert np.all(ssnamenr_alt[3:] == ssnamenr[3:])
     """
     # remove numbered
     regex = "^\d+$"
@@ -330,7 +359,7 @@ def correct_ztf_mpc_names(ssnamenr):
         if x is None:
             return y
         else:
-            return "{}{}{}".format(x['year'], x['letter'], int(x['end']))
+            return "{}{}{}".format(x['year'], x['letter'], remove_leading_zeros(x['end']))
 
     corrected = np.array([f(x, y) for x, y in zip(processed, ssnamenr[unnumbered])])
 
