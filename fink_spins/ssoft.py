@@ -134,6 +134,10 @@ def remove_leading_zeros(val):
     >>> remove_leading_zeros(string)
     'abcd'
 
+    >>> string = '000000a0bcd'
+    >>> remove_leading_zeros(string)
+    'a0bcd'
+
     >>> string = 'toto'
     >>> remove_leading_zeros(string)
     'toto'
