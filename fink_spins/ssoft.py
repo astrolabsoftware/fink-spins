@@ -139,7 +139,7 @@ def remove_leading_zeros(val):
     'toto'
     """
     if val.startswith('0'):
-        return replace_leading_zeros(val[1:])
+        return remove_leading_zeros(val[1:])
     else:
         return val
 
