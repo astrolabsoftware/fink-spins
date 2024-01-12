@@ -298,13 +298,13 @@ def estimate_sso_params_spark(ssnamenr, magpsf, sigmapsf, jd, fid, ra, dec, meth
             outdic['kurt_astrometry'] = kurtosis(separation)
 
             # Time lapse
-            outdic['n_days'] = len(pdf['i:jd'].values)
+            outdic['n_days'] = pdf['i:jd'].max() - pdf['i:jd'].min()
             ufilters = np.unique(pdf['i:fid'].values)
             for filt in ufilters:
                 mask = pdf['i:fid'].values == filt
-                outdic['n_days_{}'.format(filt)] = len(pdf['i:jd'].values[mask])
+                outdic['n_days_{}'.format(filt)] = pdf['i:jd'][mask].max() - pdf['i:jd'][mask].min()
 
-            outdic['last_jd'] = np.max(pdf['i:jd'].values)
+            outdic['last_jd'] = pdf['i:jd'].max()
 
             out.append(outdic)
     return pd.Series(out)
