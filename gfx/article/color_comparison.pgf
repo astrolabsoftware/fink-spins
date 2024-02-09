@@ -2021,7 +2021,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=0.440204in,y=1.701794in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont 12,082 SSOs}%
+\pgftext[x=0.440204in,y=1.701794in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont 18,052 SSOs}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetbuttcap%
@@ -3957,7 +3957,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=2.031395in,y=1.701794in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont 20,512 SSOs}%
+\pgftext[x=2.031395in,y=1.701794in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont 29,726 SSOs}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetbuttcap%
@@ -3976,6 +3976,19 @@
 \pgfpathlineto{\pgfqpoint{1.084353in}{0.394650in}}%
 \pgfpathclose%
 \pgfusepath{fill}%
+\end{pgfscope}%
+\begin{pgfscope}%
+\pgfpathrectangle{\pgfqpoint{1.084353in}{0.394650in}}{\pgfqpoint{0.779995in}{0.078000in}}%
+\pgfusepath{clip}%
+\pgfsetbuttcap%
+\pgfsetmiterjoin%
+\definecolor{currentfill}{rgb}{1.000000,1.000000,1.000000}%
+\pgfsetfillcolor{currentfill}%
+\pgfsetlinewidth{0.010037pt}%
+\definecolor{currentstroke}{rgb}{1.000000,1.000000,1.000000}%
+\pgfsetstrokecolor{currentstroke}%
+\pgfsetdash{}{0pt}%
+\pgfusepath{stroke,fill}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetbuttcap%
