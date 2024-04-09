@@ -1,0 +1,144 @@
+                                                      (B.Carry, 2024)
+================================================================================
+FINK SSOFT
+    B.Carry, J. Peloton, R. Le Montagner, M. Mahlke, J. Berthier
+    =References ?
+================================================================================
+Keywords: 
+
+
+Abstract:
+   Large sky surveys provide numerous non-targeted observations of small bodies
+  of the Solar System. The upcoming Legacy Survey of Space and Time (LSST) of
+  the Vera C. Rubin observatory will be the largest source of small body
+  photometry in the next decade. With non-coordinated epochs of observation,
+  colors, and therefore taxonomy and composition, can only be computed by
+  comparing absolute magnitudes obtained in each filter by solving the phase
+  function (evolution of brightness of the small body against the solar phase
+  angle). Current models in use in the community (HG, HG12* , HG1G2) however
+  fail to reproduce the long-term photometry of many targets due to the change
+  in aspect angle between apparitions. We aim at deriving a generic yet
+  simple phase function model accounting for the variable geometry of the small
+  bodies over multiple apparitions. As a spinoff of the HG1 G2 model,
+  we propose the sHG1 G2 phase function model in which we introduce a term
+  describing the brightness changes due to spin orientation and polar
+  oblateness. We apply this new model to 13,245,908 observations of 122,675
+  SSOs. These observations were acquired in the g and r filters with the Zwicky
+  Transient Facility between 2019/11/01 and 2023/12/01. We retrieve them and
+  implement the new sHG1 G2 model in Fink, a broker of alerts designed for the
+  LSST. The sHG1 G2 model leads to smaller residuals than other phase
+  function models, providing a better description of the photometry of
+  asteroids. We determine the absolute magnitude H and phase function
+  coefficients (G1 , G2 ) in each filter, the spin orientation (α0 , δ0 ), and
+  the polar-to-equatorial oblateness R for 95,593 Solar System Objects (SSOs),
+  which constitutes about a tenfold increase in the number of characterized
+  objects compared to current census. The application of the sHG1
+  G2 model on ZTF alert data using the FINK broker shows that the model is
+  appropriate to extract physical properties of asteroids from multi-band and
+  sparse photometry, such as the forthcoming LSST survey.
+
+Description:
+  ZTF photometry, FINK broker 
+
+File Summary:
+--------------------------------------------------------------------------------
+ FileName    Lrecl   Records    Explanations
+--------------------------------------------------------------------------------
+ReadMe               80        .  this file
+fink_cds.cds        564   122675  Published version of FINK SSOFT
+
+
+--------------------------------------------------------------------------------
+Byte-by-byte Description of file: ../fink_cds.csv.cds
+--------------------------------------------------------------------------------
+ Bytes Format Units  Label     Explanations
+--------------------------------------------------------------------------------
+  1-  6   I6     ---    sso_number             Official IAU number
+  8- 24   A17    ---    sso_name               Official IAU designation
+ 26- 28   I3     ---    n_obs                  Total number of observations 
+ 30- 32   I3     ---    n_obs_g                Number of observations in g filter
+ 34- 36   I3     ---    n_obs_r                Number of observations in r filter
+ 38- 43   F6.2   ---    min_phase              Minimum phase angle of obserations
+ 45- 50   F6.2   ---    min_phase_g            Minimum phase angle of obserations in g filter
+ 52- 57   F6.2   ---    min_phase_r            Minimum phase angle of obserations in r filter
+ 59- 65   F7.2   ---    max_phase              Maximum phase angle of obserations
+ 67- 73   F7.2   ---    max_phase_g            Maximum phase angle of obserations in g filter
+ 75- 81   F7.2   ---    max_phase_r            Maximum phase angle of obserations in r filter
+ 83- 88   F6.1   ---    n_days                 Number of days covered by observations
+ 90- 95   F6.1   ---    n_days_g               Number of days covered by observations in g filter
+ 97-102   F6.1   ---    n_days_r               Number of days covered by observations in r filter
+104-109   F6.2   ---    HG_H_g                 Absolute magnitude H in HG model in g filter
+111-116   F6.2   ---    HG_dH_g                Uncertainty on the absolute magnitude H in HG model in g filter
+118-122   F5.2   ---    HG_G_g                 Phase slope G in HG model in g filter
+124-129   F6.2   ---    HG_dG_g                Uncertainty on phase slope G in HG model in g filter
+131-136   F6.2   ---    HG_H_r                 Absolute magnitude H in HG model in r filter
+138-142   F5.2   ---    HG_dH_r                Uncertainty on the absolute magnitude H in HG model in r filter
+144-148   F5.2   ---    HG_G_r                 Phase slope G in HG model in r filter
+150-155   F6.2   ---    HG_dG_r                Uncertainty on phase slope G in HG model in r filter
+157-161   F5.2   ---    HG_rms                 RMS residuals of HG model
+163-167   F5.2   ---    HG_rms_g               RMS residuals of HG model in g filter
+169-173   F5.2   ---    HG_rms_r               RMS residuals of HG model in r filter
+175-182   F8.2   ---    HG_chi2red             Chi-square of HG model
+184-185   I2     ---    HG_status              Fit status of HG model
+187-187   I1     ---    HG_fit                 Quality code of the fit of HG model      
+189-194   F6.2   ---    HG1G2_H_g              Absolute magnitude H in HG1G2 model in g filter
+196-206   F11.2  ---    HG1G2_dH_g             Uncertainty on the absolute magnitude H in HG1G2 model in g filter
+208-212   F5.2   ---    HG1G2_G1_g             Phase slope G1 in HG1G2 model in g filter
+214-224   F11.2  ---    HG1G2_dG1_g            Uncertainty on phase slope G1 in HG1G2 model in g filter
+226-230   F5.2   ---    HG1G2_G2_g             Phase slope G2 in HG1G2 model in g filter
+232-242   F11.2  ---    HG1G2_dG2_g            Uncertainty on phase slope G2 in HG1G2 model in g filter
+244-249   F6.2   ---    HG1G2_H_r              Absolute magnitude H in HG1G2 model in r filter
+251-261   F11.2  ---    HG1G2_dH_r             Uncertainty on the absolute magnitude H in HG1G2 model in g filter
+263-267   F5.2   ---    HG1G2_G1_r             Phase slope G1 in HG1G2 model in r filter
+269-279   F11.2  ---    HG1G2_dG1_r            Uncertainty on phase slope G1 in HG1G2 model in r filter
+281-285   F5.2   ---    HG1G2_G2_r             Phase slope G2 in HG1G2 model in r filter
+287-296   F10.2  ---    HG1G2_dG2_r            Uncertainty on phase slope G2 in HG1G2 model in r filter
+298-302   F5.2   ---    HG1G2_rms              RMS residuals of HG1G2 model
+304-308   F5.2   ---    HG1G2_rms_g            RMS residuals of HG1G2 model in g filter
+310-314   F5.2   ---    HG1G2_rms_r            RMS residuals of HG1G2 model in r filter
+316-323   F8.2   ---    HG1G2_chi2red          Chi-square of HG1G2 model
+325-326   I2     ---    HG1G2_status           Fit status of HG1G2 model
+328-328   I1     ---    HG1G2_fit              Quality code of the fit of HG1G2 model   
+330-335   F6.2   ---    SHG1G2_H_g             Absolute magnitude H in sHG1G2 model in g filter
+337-347   F11.2  ---    SHG1G2_dH_g            Uncertainty on absolute magnitude H in sHG1G2 model in g filter
+349-353   F5.2   ---    SHG1G2_G1_g            Phase slope G1 in sHG1G2 model in g filter
+355-365   F11.2  ---    SHG1G2_dG1_g           Uncertainty on phase slope G1 in sHG1G2 model in g filter
+367-371   F5.2   ---    SHG1G2_G2_g            Phase slope G2 in sHG1G2 model in g filter
+373-383   F11.2  ---    SHG1G2_dG2_g           Uncertainty on phase slope G2 in sHG1G2 model in g filter
+385-390   F6.2   ---    SHG1G2_H_r             Absolute magnitude H in sHG1G2 model in r filter
+392-402   F11.2  ---    SHG1G2_dH_r            Uncertainty on absolute magnitude H in sHG1G2 model in r filter
+404-408   F5.2   ---    SHG1G2_G1_r            Phase slope G1 in sHG1G2 model in r filter
+410-419   F10.2  ---    SHG1G2_dG1_r           Uncertainty on phase slope G1 in sHG1G2 model in r filter
+421-425   F5.2   ---    SHG1G2_G2_r            Phase slope G2 in sHG1G2 model in r filter
+427-436   F10.2  ---    SHG1G2_dG2_r           Uncertainty on phase slope G2 in sHG1G2 model in r filter
+438-442   F5.2   ---    SHG1G2_R               Oblateness
+444-450   F7.2   ---    SHG1G2_dR              Uncertainty on oblateness
+452-458   F7.2   ---    SHG1G2_alpha0          Right Ascension of the spin vector (deg.)
+460-465   F6.2   ---    SHG1G2_delta0          Declination of the spin vector (deg.)
+467-473   F7.2   ---    SHG1G2_alpha0_alt      Right Ascension of the spin vector (deg.), symmetric solution
+475-480   F6.2   ---    SHG1G2_delta0_alt      Declination of the spin vector (deg.), symmetric solution
+482-494   F13.2  ---    SHG1G2_dalpha0         Uncertainty on the Right Ascension of the spin vector (deg.)
+496-506   F11.2  ---    SHG1G2_ddelta0         Uncertainty on the Declination of the spin vector (deg.)
+508-514   F7.2   ---    SHG1G2_obliquity       Obliquity of the target (deg)
+516-520   F5.2   ---    SHG1G2_min_cos_lambda  Minimum cosine of the aspect angle Lambda
+522-526   F5.2   ---    SHG1G2_mean_cos_lambda Mean cosine of the aspect angle Lambda
+528-532   F5.2   ---    SHG1G2_max_cos_lambda  Maximum cosine of the aspect angle Lambda
+534-538   F5.2   ---    SHG1G2_rms             RMS residuals of sHG1G2 model
+540-544   F5.2   ---    SHG1G2_rms_g           RMS residuals of sHG1G2 model in g filter
+546-550   F5.2   ---    SHG1G2_rms_r           RMS residuals of sHG1G2 model in g filter
+552-559   F8.2   ---    sHG1G2_chi2red         Chi-square of sHG1G2 model
+561-562   I2     ---    sHG1G2_status          Fit status of sHG1G2 model
+564-564   I1     ---    sHG1G2_fit             Quality code of the fit of sHG1G2 model
+
+--------------------------------------------------------------------------------
+
+
+
+See also:
+None
+
+Acknowledgements:
+
+References:
+================================================================================
+     (prepared by author  / pyreadme )
