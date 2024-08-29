@@ -12,9 +12,9 @@ pyarrow==9.0.0
 slackclient==2.9.3
 astropy==4.0.6
 astroquery==0.4.6
-fink_filters>=3.5
-git+https://github.com/astrolabsoftware/fink-science@4.2.0
-fink-utils>=0.13.3
+fink_filters>=3.34
+git+https://github.com/astrolabsoftware/fink-science@5.15.0
+fink-utils>=0.20.0
 scipy==1.4.1
 scikit-learn==1.0.2
 scikit-image==0.16.2
@@ -23,3 +23,4 @@ fink-tns>=0.6
 protobuf==3.20
 space-rocks==1.8.5
 pytest==7.4.0
+gatspy==0.3
