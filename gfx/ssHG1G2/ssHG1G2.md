@@ -18,7 +18,38 @@ $s = s(ra_0, dec_0, period, a/b, a/c, rotation_0)$
 --> on a la direction du pole, et les 2 rapports de taille. 
 :-)
 
-# Exemple
+
+# Modele
+
+![explanation](ssHG1G2.png)
+
+- **TOP** la surface projetee sur le ciel
+- **BOTTOM** la magnitude
+- $\Lambda$ l'angle d'aspect
+- $\phi$ la rotation
+
+On voit bien comment la nouvelle fonction **s** est plus *douce* (pas de
+point anguleux a l'equateur) en comparaison avec ce qu'on avait ecrit l'an dernier.
+
+Autre chose, l'amplitude de la LC entre 0-90-180 d'aspect angle est legerement differente avec les 2 fonctions, alors meme que pour ce schema, les valeurs sont coherentes -> a explorer: peut etre que notre probleme sur l'oblateness **R** venait de la?
+
+
+# Exemples
+
+## (9799) Thronium
+
+Un troyen, illustration du gain en RMS:
+
+![res histo](9799_Thronium_res_hist.png)
+
+Suivant le temps
+![res JD](9799_Thronium_res_jd.png)
+
+Suivant la phase
+![res phase](9799_Thronium_res_phase.png)
+
+Et voila pourquoi le RMS est meilleur: sur le "court" terme, on attrape la variabilite due a la rotation!
+![illustration](9799_Thronium_comparison.png)
 
 ## (5209) Olooson
 
@@ -37,14 +68,6 @@ Un objet avec des observations a haute cadence, donc on voit la LC sur une nuit.
 ![res JD](186153_2001_UN66_res_jd.png)
 ![res phase](186153_2001_UN66_res_phase.png)
 
-## (9799) Thronium
-
-Un troyen, un peu pareil, moins extreme
-
-![res histo](9799_Thronium_res_hist.png)
-![res JD](9799_Thronium_res_jd.png)
-![res phase](9799_Thronium_res_phase.png)
-
 
 ## Conclusion preliminaire
 
@@ -62,12 +85,13 @@ Ca **maaaaaaaaaaaarche**
 
 ## Trucs ~positifs
 
-- La solution est-elle stable? unique?
+- La solution est-elle stable? unique? C'est clairement **LE** point important: car ok on a un chi2 minimum... mais ca veut dire quelque chose?
 - Il faut nettoyer le code
-- Il faut faire tourner sur N>>1 SSOs pour conclure pour de vrai
+- Il faut faire tourner sur N>>1 SSOs pour conclure pour de vrai, voir quand ca marche, marche pas
 - Je dois ameliorer plusieurs aspects
   - Periode siderale au lieu de synodique (eq. 12.4 RIEA) pour casser la degenerescence du spin
   - Algorithme pour trouver les valeurs initiales des $a/b$ et $a/c$ 
   - Valeur initiale de la **periode** ?!
 
+Bref, on en est juste au debut, mais c'est prometteur!
 
