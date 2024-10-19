@@ -21,7 +21,7 @@ $s = s(ra_0, dec_0, period, a/b, a/c, rotation_0)$
 
 # Modele
 
-![explanation](ssHG1G2.png)
+![Model explanation](ssHG1G2.png)
 
 - **TOP** la surface projetee sur le ciel
 - **BOTTOM** la magnitude
@@ -40,33 +40,31 @@ Autre chose, l'amplitude de la LC entre 0-90-180 d'aspect angle est legerement d
 
 Un troyen, illustration du gain en RMS:
 
-![res histo](9799_Thronium_res_hist.png)
+![Thronium: Histogram of residuals](9799_Thronium_res_hist.png)
+![Thronium: Residuals against time](9799_Thronium_res_jd.png)
+![Thronium: Residuals against phase angle](9799_Thronium_res_phase.png)
+![Thronium: Comparison between sHG1G2 and ssHG1G2](9799_Thronium_comparison.png)
 
-Suivant le temps
-![res JD](9799_Thronium_res_jd.png)
-
-Suivant la phase
-![res phase](9799_Thronium_res_phase.png)
 
 Et voila pourquoi le RMS est meilleur: sur le "court" terme, on attrape la variabilite due a la rotation!
-![illustration](9799_Thronium_comparison.png)
+
 
 ## (5209) Olooson
 
 Beaucoup d'observations, gros residus sHG1G2
 
-![res histo](5209_Oloosson_res_hist.png)
-![res JD](5209_Oloosson_res_jd.png)
-![res phase](5209_Oloosson_res_phase.png)
+![Olooson: Histogram of residuals](5209_Oloosson_res_hist.png)
+![Olooson: Residuals against time](5209_Oloosson_res_jd.png)
+![Olooson: Residuals against phase angle](5209_Oloosson_res_phase.png)
 
 
 ## (186153) 2001 UN66
 
 Un objet avec des observations a haute cadence, donc on voit la LC sur une nuit. 
 
-![res histo](186153_2001_UN66_res_hist.png)
-![res JD](186153_2001_UN66_res_jd.png)
-![res phase](186153_2001_UN66_res_phase.png)
+![2001 UN66: Histogram of residuals](186153_2001_UN66_res_hist.png)
+![2001 UN66: Residuals against time](186153_2001_UN66_res_jd.png)
+![2001 UN66: Residuals against phase angle](186153_2001_UN66_res_phase.png)
 
 
 ## Conclusion preliminaire
