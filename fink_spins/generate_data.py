@@ -51,7 +51,7 @@ def format_ssoft(data: pd.DataFrame, filters: dict, flavor: str) -> pd.DataFrame
         'sso_name',
         'sso_number'
     ]
-    if flavor in ['HG1G2', 'HG']:
+    if flavor in ['SHG1G2', 'HG1G2', 'HG']:
         # Remove columns that are shared across all SSOFT
         data = data.drop(columns=shared_cols, errors='ignore')
 
@@ -67,7 +67,23 @@ def format_ssoft(data: pd.DataFrame, filters: dict, flavor: str) -> pd.DataFrame
         dict_rename[f"n_obs_{filt}"] = f"n_obs_{filters[filt]}"
         dict_rename[f"n_days_{filt}"] = f"n_days_{filters[filt]}"
 
-    if flavor == 'SHG1G2':
+    if flavor == 'SSHG1G2':
+        for filt in filters.keys():
+            dict_rename[f"G1_{filt}"] = f"{flavor}_G1_{filters[filt]}"
+            dict_rename[f"G2_{filt}"] = f"{flavor}_G2_{filters[filt]}"
+            dict_rename[f"err_G1_{filt}"] = f"{flavor}_dG1_{filters[filt]}"
+            dict_rename[f"err_G2_{filt}"] = f"{flavor}_dG2_{filters[filt]}"
+        
+        dict_rename["alpha0"] = f"{flavor}_alpha0"
+        dict_rename["delta0"] = f"{flavor}_delta0"
+        dict_rename["phi0"] = f"{flavor}_phi0"
+        dict_rename["period"] = f"{flavor}_period"
+        dict_rename["err_alpha0"] = f"{flavor}_dalpha0"
+        dict_rename["err_delta0"] = f"{flavor}_ddelta0"
+        dict_rename["err_a_b"] = f"{flavor}_da_b"
+        dict_rename["err_a_c"] = f"{flavor}_da_c"
+        dict_rename["err_phi0"] = f"{flavor}_dphi0"
+    elif flavor == 'SHG1G2':
         for filt in filters.keys():
             dict_rename[f"G1_{filt}"] = f"{flavor}_G1_{filters[filt]}"
             dict_rename[f"G2_{filt}"] = f"{flavor}_G2_{filters[filt]}"
@@ -122,7 +138,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
         logging.info('Downloading the SSOFT from Fink servers...')
 
-    flavors = ['SHG1G2', 'HG1G2', 'HG']
+    flavors = ['SSHG1G2', 'SHG1G2', 'HG1G2', 'HG']
     container = []
     for flavor in flavors:
         r = requests.post(
@@ -142,16 +158,18 @@ if __name__ == "__main__":
         logging.info(msg)
 
     if args.verbose:
-        logging.info('Merging the 3 SSOFTs...')
+        logging.info('Merging the 4 SSOFTs...')
 
     for index in range(len(container)):
         # inplace replacement
         container[index] = format_ssoft(container[index], filters, flavor=flavors[index])
 
     # HG with HG1G2
-    tmp = container[2].merge(container[1], on="ssnamenr")
+    tmp1 = container[3].merge(container[2], on="ssnamenr")
     # (HG with HG1G2) with sHG1G2
-    data = tmp.merge(container[0], on="ssnamenr")
+    tmp2 = tmp1.merge(container[1], on="ssnamenr")
+    # (HG with HG1G2 with sHG1G2) with SSHG1G2
+    data = tmp2.merge(container[0], on="ssnamenr")
 
     if args.rocks:
         logging.info('Identifying names with rocks...')
