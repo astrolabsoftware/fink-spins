@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 
-def compute_mask(data, R_min=0.3, thres=1e-3, model='FINK', kind='inter'):
+def compute_mask(data, R_min=0.3, thres_spin=1e-3, thres_phase=1e-3, model='FINK', kind='inter'):
     """Extract Fink mask
     
     Parameters
@@ -31,11 +31,13 @@ def compute_mask(data, R_min=0.3, thres=1e-3, model='FINK', kind='inter'):
     """
     if model == 'FINK':
         mask_R = compute_mask_R(data, R_min)
-        mask_phase = compute_mask_phase(data, thres, kind, model='SHG1G2')
-        maskSpin = compute_mask_spin(data, thres)
-        mask = mask_phase & mask_R & maskSpin
+        mask_phase_shg1g2 = compute_mask_phase(data, thres_phase, kind, model='SHG1G2')
+        mask_phase_sshg1g2 = compute_mask_phase(data, thres_phase, kind, model='SSHG1G2')
+        maskSpin_shg1g2 = compute_mask_spin(data, thres_spin, model="SHG1G2")
+        maskSpin_sshg1g2 = compute_mask_spin(data, thres_spin, model="SSHG1G2")
+        mask = mask_phase_shg1g2 & mask_phase_sshg1g2 & mask_R & maskSpin_shg1g2 & maskSpin_sshg1g2
     else:
-        mask = compute_mask_phase(data, thres, kind, model=model)
+        mask = compute_mask_phase(data, thres_phase, kind, model=model)
     
     return mask
 
@@ -73,23 +75,45 @@ def compute_mask_R(data, R_min):
     
     return mask_R
 
-def compute_mask_spin(data, thres):
+def compute_mask_spin(data, thres, model="SHG1G2"):
     """ Compute mask for good spin values
     """
-    maskSpin = (
-        (data.SHG1G2_alpha0.notna()) 
-        & (data.SHG1G2_delta0.notna()) 
-        & (data.SHG1G2_alpha0 > thres)
-        & (np.abs(360 - data.SHG1G2_alpha0) > thres)
-        & (np.abs(data.SHG1G2_alpha0 - 180) > thres)
-        & (np.abs(data.SHG1G2_delta0) > thres)
-    )
+    if model == "SSHG1G2":
+        maskSpin = (
+            (data.SSHG1G2_alpha0.notna()) 
+            & (data.SSHG1G2_delta0.notna()) 
+            & (data.SSHG1G2_alpha0 > thres)
+            & (np.abs(360 - data.SSHG1G2_alpha0) > thres)
+            & (np.abs(data.SSHG1G2_alpha0 - 180) > thres)
+            & (np.abs(data.SSHG1G2_delta0) > thres)
+        )
+    elif model == "SHG1G2":
+        maskSpin = (
+            (data.SHG1G2_alpha0.notna()) 
+            & (data.SHG1G2_delta0.notna()) 
+            & (data.SHG1G2_alpha0 > thres)
+            & (np.abs(360 - data.SHG1G2_alpha0) > thres)
+            & (np.abs(data.SHG1G2_alpha0 - 180) > thres)
+            & (np.abs(data.SHG1G2_delta0) > thres)
+        )
     return maskSpin
 
 def compute_mask_phase(data, thres, kind, model='SHG1G2'):
     """ Compute mask for good phase values
     """
-    if model == 'SHG1G2':
+    if model == 'SSHG1G2':
+        mask_fit = (data.SSHG1G2_fit == 0) & (data.SSHG1G2_status >= 2)
+        mask_g = (
+            (data.SSHG1G2_G1_g > thres)
+            & (data.SSHG1G2_G2_g > thres)
+            & ((1 - data.SSHG1G2_G1_g - data.SSHG1G2_G2_g) > thres)
+        )
+        mask_r = (
+            (data.SSHG1G2_G1_r > thres)
+            & (data.SSHG1G2_G2_r > thres)
+            & ((1 - data.SSHG1G2_G1_r - data.SSHG1G2_G2_r) > thres)
+        )
+    elif model == 'SHG1G2':
         mask_fit = (data.SHG1G2_fit == 0) & (data.SHG1G2_status >= 2)
         mask_g = (
             (data.SHG1G2_G1_g > thres)

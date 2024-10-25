@@ -95,6 +95,7 @@ def format_ssoft(data: pd.DataFrame, filters: dict, flavor: str) -> pd.DataFrame
         dict_rename["err_alpha0"] = f"{flavor}_dalpha0"
         dict_rename["err_delta0"] = f"{flavor}_ddelta0"
         dict_rename["err_R"] = f"{flavor}_dR"
+        dict_rename["period"] = f"{flavor}_period"
     elif flavor == 'HG1G2':
         for filt in filters.keys():
             dict_rename[f"G1_{filt}"] = f"{flavor}_G1_{filters[filt]}"
