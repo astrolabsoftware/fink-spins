@@ -20,6 +20,7 @@ import io
 import os
 
 import pandas as pd
+import numpy as np
 
 import rocks
 
@@ -51,6 +52,26 @@ def format_ssoft(data: pd.DataFrame, filters: dict, flavor: str) -> pd.DataFrame
         'sso_name',
         'sso_number'
     ]
+    if flavor == "SSHG1G2":
+        # drop column name that will clash
+        data = data.drop(columns=["fit", "status", "period", "period_chi2red"])
+        ids = ["00", "01", "10", "11"]
+        # get combination with lower RMS
+        data["combination"] = data[["rms_00", "rms_01", "rms_01", "rms_11"]].apply(
+            lambda x: ids[np.argmin(x.values)], axis=1
+        )
+
+        container = []
+        for row in data.iterrows():
+            # rename best RMS to merge with other SSOFT
+            dic1 = {k[:-3]: v for k, v in zip(row[1].index, row[1].values) if k.endswith(row[1]["combination"])}
+
+            # Add other columns 
+            dic2 = {k: v for k, v in zip(row[1].index, row[1].values)}
+            container.append({**dic1, **dic2})
+        data = pd.DataFrame(container)
+
+
     if flavor in ['SHG1G2', 'HG1G2', 'HG']:
         # Remove columns that are shared across all SSOFT
         data = data.drop(columns=shared_cols, errors='ignore')
