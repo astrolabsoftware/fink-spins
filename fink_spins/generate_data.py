@@ -142,8 +142,8 @@ if __name__ == "__main__":
         '-output_dir', type=str, default='data/ztf/',
         help="Output folder to store data. Default is data/ztf")
     parser.add_argument(
-        '-api_url', type=str, default='https://fink-portal.org',
-        help="API URL from Fink. Default is https://fink-portal.org.")
+        '-api_url', type=str, default='https://api.fink-portal.org',
+        help="API URL from Fink. Default is https://api.fink-portal.org.")
     parser.add_argument(
         '--rocks', action='store_true',
         help="If specified, override names & numbers from the SSOFT by running rocks on `ssnamenr`.")
